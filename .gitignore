@@ -1,0 +1,7 @@
+venv/
+.env
+rough*
+test*
+temp/
+__pycache__
+*.tmp
