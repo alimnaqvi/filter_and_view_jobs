@@ -3,7 +3,7 @@ import pandas as pd
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-# from contextlib import contextmanager
+from contextlib import asynccontextmanager
 from pydantic import BaseModel
 from pathlib import Path
 import os
@@ -27,18 +27,20 @@ except Exception as e:
 class StatusUpdate(BaseModel):
     status: str
 
-# --- FastAPI App Initialization ---
-app = FastAPI()
-
 # --- Startup Event ---
-@app.on_event("startup")
-def on_startup():
+# @app.on_event("startup")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     """
     This function runs when the server starts.
     It initializes the database and syncs it with the CSV.
     """
     database.init_db()
     database.sync_db_with_csv()
+    yield
+
+# --- FastAPI App Initialization ---
+app = FastAPI(lifespan=lifespan)
 
 # --- API Endpoints ---
 @app.get("/api/jobs")
