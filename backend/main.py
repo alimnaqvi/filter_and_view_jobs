@@ -6,14 +6,22 @@ from fastapi.responses import FileResponse
 # from contextlib import contextmanager
 from pydantic import BaseModel
 from pathlib import Path
+import os
 
 # Import our database functions
-import database
+from backend import database
 
 # Define paths
 BASE_DIR = Path(__file__).resolve().parent
 FRONTEND_DIR = BASE_DIR.parent / "frontend"
 CSV_DB_PATH = database.CSV_DB_PATH
+
+# Get HTML directory
+try:
+    HTML_DIR = os.environ["HTML_DIR"]
+except Exception as e:
+    print(f"Error getting variable from the environment: {e}.")
+    exit(1)
 
 # --- Pydantic Models for Request Body ---
 class StatusUpdate(BaseModel):
@@ -39,6 +47,8 @@ def get_jobs(status: str = None, q: str = None):
     API endpoint to get jobs.
     Allows filtering by status and a search query 'q'.
     """
+    print("Request received on /api/jobs")
+
     if not CSV_DB_PATH.exists():
         raise HTTPException(status_code=404, detail=f"{CSV_DB_PATH.name} not found")
 
@@ -60,6 +70,8 @@ def get_jobs(status: str = None, q: str = None):
             df['Required technical skills'].str.contains(q, case=False, na=False)
         )
         df = df[search_mask]
+    
+    df = df.fillna('N/A')
 
     # Convert DataFrame to a list of dictionaries for JSON response
     return df.to_dict('records')
@@ -72,7 +84,7 @@ def update_status(filename: str, status_update: StatusUpdate):
 
 # --- Static File Serving ---
 # This serves the saved HTML job descriptions
-app.mount("/jobs", StaticFiles(directory=BASE_DIR / "saved_jobs"), name="jobs")
+app.mount("/jobs", StaticFiles(directory=HTML_DIR), name="jobs")
 
 # This serves the main frontend (index.html, script.js, etc.)
 app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Tracker</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>My Job Applications</h1>
+
+        <div class="filters">
+            <div class="filter-group">
+                <label for="status-filter">Status:</label>
+                <select id="status-filter">
+                    <option value="all">All</option>
+                    <option value="new" selected>New</option>
+                    <option value="viewed">Viewed</option>
+                    <option value="applied">Applied</option>
+                    <option value="archived">Archived</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="search-box">Search:</label>
+                <input type="text" id="search-box" placeholder="e.g., Python, React, Berlin...">
+            </div>
+        </div>
+
+        <div class="job-count" id="job-count">Loading jobs...</div>
+
+        <table class="job-table">
+            <thead>
+                <tr>
+                    <th>Status</th>
+                    <th>Job Title</th>
+                    <th>Company</th>
+                    <th>Location</th>
+                    <th>Tech Stack</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="job-list">
+                <!-- Job rows will be inserted here by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
