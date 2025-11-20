@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 from pydantic import BaseModel
 from pathlib import Path
 import os
+from sqlalchemy import create_engine
 
 # Import our database functions
 from backend import database
@@ -54,7 +55,8 @@ def get_jobs(status: str = None, q: str = None):
     if not CSV_DB_PATH.exists():
         raise HTTPException(status_code=404, detail=f"{CSV_DB_PATH.name} not found")
 
-    df = pd.read_csv(CSV_DB_PATH)
+    # df = pd.read_csv(CSV_DB_PATH)
+    df = database.get_df_sorted_remove_deleted(CSV_DB_PATH)
     
     # Get statuses from our Postgres DB and merge them into the dataframe
     statuses = database.get_job_statuses()
@@ -63,7 +65,13 @@ def get_jobs(status: str = None, q: str = None):
     # Apply filters
     if status and status != "all":
         df = df[df['status'] == status]
+
+    # Remove filenames that have been deleted and sort by last modification date
+    # df['file_exists'] = df['Filename'].apply(lambda x: Path(HTML_DIR).joinpath(x).exists())
+    # df = df[df['file_exists'] == True]
     
+    # TODO: Add more filters, especially for last_mod_time
+
     if q:
         # Simple search across a few key columns
         search_mask = (

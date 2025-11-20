@@ -1,6 +1,7 @@
 venv/
 .env
 rough*
+one_off_scripts/
 test*
 temp/
 __pycache__
