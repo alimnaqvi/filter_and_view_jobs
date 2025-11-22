@@ -56,7 +56,7 @@ def get_jobs(status: str = None, q: str = None):
         raise HTTPException(status_code=404, detail=f"{CSV_DB_PATH.name} not found")
 
     # df = pd.read_csv(CSV_DB_PATH)
-    df = database.get_df_sorted_remove_deleted(CSV_DB_PATH)
+    df = database.get_df_with_mod_time_remove_deleted(CSV_DB_PATH)
     
     # Get statuses from our Postgres DB and merge them into the dataframe
     statuses = database.get_job_statuses()

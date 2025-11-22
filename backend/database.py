@@ -166,13 +166,13 @@ def update_job_status(filename: str, status: str):
 
 
 
-def get_df_sorted_remove_deleted(input_csv=CSV_DB_PATH):
+def get_df_with_mod_time_remove_deleted(input_csv=CSV_DB_PATH):
     df = pd.read_csv(input_csv)
     df['last_mod_time'] = df['Filename'].apply(get_last_mod_time)
     # get_last_mod_time returns None for non-existent files
-    df['last_mod_time'] = pd.to_datetime(df['last_mod_time'], errors='coerce')
+    # df['last_mod_time'] = pd.to_datetime(df['last_mod_time'], errors='coerce')
     # print(f"df len before dropping NaT: {len(df.index)}")
-    df.dropna(subset=['last_mod_time'], inplace=True)
+    df.dropna(subset=['last_mod_time'], inplace=True) # remove non-existing files
     # print(f"df len after dropping NaT: {len(df.index)}")
     return df
 
