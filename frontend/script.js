@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const jobCount = document.getElementById('job-count');
 
     let searchTimeout;
+    // TODO: Implement local database cache and add a button to refresh the cache
 
     const fetchAndRenderJobs = async () => {
         const status = statusFilter.value;
@@ -83,7 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
             row.appendChild(createCell(job['Job title']));
             row.appendChild(createCell(job['Company name']));
             row.appendChild(createCell(job['Location']));
-            row.appendChild(createCell(job['Tech stack']));
+            row.appendChild(createCell(job['German language fluency required']));
+            row.appendChild(createCell(job['Is tech job']));
             row.appendChild(actionsCell);
 
             jobList.appendChild(row);

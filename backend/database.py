@@ -48,10 +48,11 @@ def init_db():
     """Initializes the database and table if they don't exist."""
     try:
         with DB_POOL.getconn() as conn:
-            print("init_db: Connection with database established.")
-
+            print("init_db: Connection with database established. Opening cursor.")
+            print(f"Cursor opened. Executing: CREATE TABLE IF NOT EXISTS {TABLE_NAME}")
             # Open a cursor to perform database operations
             with conn.cursor() as cursor:
+                
                 # Create a table to store data
                 cursor.execute(f"""
                 CREATE TABLE IF NOT EXISTS {TABLE_NAME} (
@@ -87,12 +88,14 @@ def sync_db_with_csv():
 
     try:
         with DB_POOL.getconn() as conn:
-            print("sync_db_with_csv: Connection with database established.")
+            print("sync_db_with_csv: Connection with database established. Opening cursor.")
 
             # Open a cursor to perform database operations
             with conn.cursor() as cursor:
                 # Find which filenames are not yet in the database
+                print(f"Cursor opened. Executing: SELECT filename FROM {TABLE_NAME}")
                 cursor.execute(f"SELECT filename FROM {TABLE_NAME}")
+                print("Fetching all rows...")
                 existing_files = {row[0] for row in cursor.fetchall()}
                 print("Filenames fetched from DB. Determining new files")
 
@@ -136,10 +139,11 @@ def get_job_statuses() -> dict:
     """Fetches all job statuses from the DB as a dictionary."""
     try:
         with DB_POOL.getconn() as conn:
-            print("get_job_statuses: Connection with database established.")
+            print("get_job_statuses: Connection with database established. Opening cursor.")
 
             # Open a cursor to perform database operations
             with conn.cursor() as cursor:
+                print(f"Cursor opened. Executing: SELECT filename, status FROM {TABLE_NAME}")
                 cursor.execute(f"SELECT filename, status FROM {TABLE_NAME}")
                 statuses = {row[0]: row[1] for row in cursor.fetchall()}
                 return statuses
@@ -151,10 +155,11 @@ def update_job_status(filename: str, status: str):
     """Updates the status of a specific job."""
     try:
         with DB_POOL.getconn() as conn:
-            print("update_job_status: Connection with database established.")
+            print("update_job_status: Connection with database established. Opening cursor.")
 
             # Open a cursor to perform database operations
             with conn.cursor() as cursor:
+                print(f"Cursor opened. Executing: UPDATE {TABLE_NAME} SET status = %s WHERE filename = %s")
                 cursor.execute(
                     f"UPDATE {TABLE_NAME} SET status = %s WHERE filename = %s",
                     (status, filename)
