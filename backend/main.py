@@ -57,6 +57,8 @@ def get_jobs(status: str = None, q: str = None):
 
     # df = pd.read_csv(CSV_DB_PATH)
     df = database.get_df_with_mod_time_remove_deleted(CSV_DB_PATH)
+
+    df = database.get_sorted_df_of_last_n_days(df)
     
     # Get statuses from our Postgres DB and merge them into the dataframe
     statuses = database.get_job_statuses()

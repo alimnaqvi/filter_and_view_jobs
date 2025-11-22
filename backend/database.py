@@ -6,6 +6,7 @@ from psycopg2.extras import execute_batch
 import os
 from datetime import datetime, timezone
 import sqlalchemy
+# import time
 
 load_dotenv()
 
@@ -164,7 +165,28 @@ def update_job_status(filename: str, status: str):
     except Exception as e:
         print(f"Error updating job status: {e}.")
 
+def iso_date_to_days_since_last_mod(iso_date: str) -> int:
+    delta_since_date = datetime.now(tz=timezone.utc) - datetime.fromisoformat(iso_date)
+    return delta_since_date.total_seconds() / 60  / 60 / 24
 
+def get_sorted_df_of_last_n_days(input_df: pd.DataFrame, days: float = 7):
+    """
+    Returns a new df after removing all rows that are more than `days` days ago from now.
+    Sorts the resulting df by `last_mod_time` column, latest entry first.
+    """
+    input_df['dt_last_mod_time'] = pd.to_datetime(input_df['last_mod_time'], errors='coerce')
+
+    input_df.dropna(subset=['dt_last_mod_time'], inplace=True) # ensure no NaT in the entire column
+
+    output_df: pd.DataFrame = input_df[pd.Timestamp(datetime.now(tz=timezone.utc)) - input_df['dt_last_mod_time'] <= pd.Timedelta(days=days)]
+
+    # input_df['days_since_last_mod'] = input_df['last_mod_time'].apply(iso_date_to_days_since_last_mod)
+
+    # output_df = input_df[input_df['days_since_last_mod'] <= 7]
+
+    output_df = output_df.sort_values(by=['dt_last_mod_time'], ascending=False, ignore_index=True)
+
+    return output_df
 
 def get_df_with_mod_time_remove_deleted(input_csv=CSV_DB_PATH):
     df = pd.read_csv(input_csv)

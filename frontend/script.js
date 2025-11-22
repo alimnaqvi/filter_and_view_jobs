@@ -43,8 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // TODO: Update the job list rendering logic so that they are sorted by last_mod_date by default
-
         jobCount.textContent = `${jobs.length} job(s) found.`;
 
         jobs.forEach(job => {
