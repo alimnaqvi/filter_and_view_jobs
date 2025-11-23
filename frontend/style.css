@@ -80,8 +80,10 @@ select, input[type="text"] {
     color: #fff;
 }
 .status-new { background-color: #3498db; }
-.status-viewed { background-color: #9b59b6; }
-.status-applied { background-color: #2ecc71; }
+.status-viewed { background-color: #fca311; }
+.status-applied { background-color: #7209b7; }
+.status-shortlisted { background-color: #2ecc71; }
+.status-longlisted { background-color: #1a535c; }
 .status-archived { background-color: #7f8c8d; }
 .status-default { background-color: #e74c3c; }
 

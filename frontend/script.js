@@ -68,6 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Actions Cell
             const actionsCell = document.createElement('td');
+
             // Link to the saved HTML file
             const viewLink = document.createElement('a');
             viewLink.href = `/jobs/${job.Filename}`; // Served by FastAPI's StaticFiles
@@ -75,14 +76,45 @@ document.addEventListener('DOMContentLoaded', () => {
             viewLink.target = '_blank'; // Open in new tab
             viewLink.className = 'action-btn btn-view';
             actionsCell.appendChild(viewLink);
+
+            // Add dropdown to change status
+            // // Label for the dropdown
+            // const statusLabel = document.createElement('label');
+            // statusLabel.for = 'change-status-filter';
+            // statusLabel.textContent = 'Change status';
+            // actionsCell.appendChild(statusLabel);
+            // The dropdown
+            statusArr = ["", "New", "Viewed", "Shortlisted", "Longlisted", "Applied", "Archived"];
+            const statusDropdown = document.createElement('select');
+            statusDropdown.id = 'change-status-filter';
+            statusArr.forEach((item) => {
+                opt = document.createElement('option');
+                opt.value = item.toLowerCase();
+                if (item === "") {
+                    opt.textContent = "Change status"
+                } else {
+                    opt.textContent = item;
+                    opt.onclick = () => updateStatus(job.Filename, item.toLowerCase());
+                }
+                statusDropdown.appendChild(opt);
+            });
+            actionsCell.appendChild(statusDropdown);
             
-            // Add buttons to change status
-            const nextStatus = (job.status === 'new') ? 'viewed' : 'new';
-            const updateButton = document.createElement('button');
-            updateButton.textContent = `Mark as ${nextStatus}`;
-            updateButton.className = 'action-btn btn-update';
-            updateButton.onclick = () => updateStatus(job.Filename, nextStatus);
-            actionsCell.appendChild(updateButton);
+            // // Add buttons to change view status
+            // const viewStatus = (job.status === 'new') ? 'viewed' : 'new';
+            // const updateViewedButton = document.createElement('button');
+            // updateViewedButton.textContent = `Mark as ${viewStatus}`;
+            // updateViewedButton.className = 'action-btn btn-update';
+            // updateViewedButton.onclick = () => updateStatus(job.Filename, viewStatus);
+            // actionsCell.appendChild(updateViewedButton);
+
+            // // Add buttons to change shortlist status
+            // const shortlistStatus = (job.status !== 'shortlisted') ? 'shortlisted' : 'new';
+            // const updateShortlistedButton = document.createElement('button');
+            // updateShortlistedButton.textContent = `Mark as ${shortlistStatus}`;
+            // updateShortlistedButton.className = 'action-btn btn-update';
+            // updateShortlistedButton.onclick = () => updateStatus(job.Filename, shortlistStatus);
+            // actionsCell.appendChild(updateShortlistedButton);
 
             // Date added
             last_mod_date = new Date(job['last_mod_time'])
