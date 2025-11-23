@@ -2,6 +2,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const jobList = document.getElementById('job-list');
     const statusFilter = document.getElementById('status-filter');
+    const germanFilter = document.getElementById('german-filter');
     const searchBox = document.getElementById('search-box');
     const jobCount = document.getElementById('job-count');
 
@@ -10,12 +11,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const fetchAndRenderJobs = async () => {
         const status = statusFilter.value;
+        const german = germanFilter.value;
         const query = searchBox.value;
 
         // Build the API URL with query parameters
         const url = new URL('/api/jobs', window.location.origin);
         if (status && status !== 'all') {
             url.searchParams.append('status', status);
+        }
+        if (german && german !== 'all') {
+            url.searchParams.append('german', german);
         }
         if (query) {
             url.searchParams.append('q', query);
@@ -131,6 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Event Listeners for filters
     statusFilter.addEventListener('change', fetchAndRenderJobs);
+    germanFilter.addEventListener('change', fetchAndRenderJobs);
     searchBox.addEventListener('input', () => {
         clearTimeout(searchTimeout);
         // Debounce search input to avoid excessive API calls

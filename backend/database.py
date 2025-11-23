@@ -1,11 +1,11 @@
 import pandas as pd
 from pathlib import Path
 from dotenv import load_dotenv
-from psycopg2 import pool
+from psycopg2 import pool, InterfaceError
 from psycopg2.extras import execute_batch
 import os
 from datetime import datetime, timezone
-import sqlalchemy
+# import sqlalchemy
 # import time
 
 load_dotenv()
@@ -151,16 +151,23 @@ def get_job_statuses() -> dict:
     """Fetches all job statuses from the DB as a dictionary."""
     conn = None
     try:
-        conn = DB_POOL.getconn()
-        with conn:
-            print("get_job_statuses: Connection with database established. Opening cursor.")
+        for i in range(5): # Try 5 times max in case DB connection has been closed from the other side
+            conn = DB_POOL.getconn()
+            try:
+                with conn:
+                    print("get_job_statuses: Connection with database established. Opening cursor.")
 
-            # Open a cursor to perform database operations
-            with conn.cursor() as cursor:
-                print(f"Cursor opened. Executing: SELECT filename, status FROM {TABLE_NAME}")
-                cursor.execute(f"SELECT filename, status FROM {TABLE_NAME}")
-                statuses = {row[0]: row[1] for row in cursor.fetchall()}
-                return statuses
+                    # Open a cursor to perform database operations
+                    with conn.cursor() as cursor:
+                        print(f"Cursor opened. Executing: SELECT filename, status FROM {TABLE_NAME}")
+                        cursor.execute(f"SELECT filename, status FROM {TABLE_NAME}")
+                        statuses = {row[0]: row[1] for row in cursor.fetchall()}
+                        return statuses
+            except InterfaceError as e:
+                print(f"Got InterfaceError: {e} (times: {i + 1}).")
+                if conn:
+                    print("Discarding the connection from pool and trying another one (max 5 attempts).")
+                    DB_POOL.putconn(conn, close=True)
 
     except Exception as e:
         print(f"Error getting job statuses: {e}.")

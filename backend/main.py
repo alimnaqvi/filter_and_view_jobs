@@ -1,6 +1,6 @@
 # backend/main.py
 import pandas as pd
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from contextlib import asynccontextmanager
@@ -45,7 +45,7 @@ app = FastAPI(lifespan=lifespan)
 
 # --- API Endpoints ---
 @app.get("/api/jobs")
-def get_jobs(status: str = None, q: str = None):
+def get_jobs(request: Request):
     """
     API endpoint to get jobs.
     Allows filtering by status and a search query 'q'.
@@ -67,9 +67,26 @@ def get_jobs(status: str = None, q: str = None):
     else:
         raise HTTPException(status_code=404, detail=f"Unable to get statuses from database. Check connection to database.")
 
-    # Apply filters
+    # Apply status filter
+    status = request.query_params.get("status")
     if status and status != "all":
         df = df[df['status'] == status]
+
+    # Apply german filter
+    german = request.query_params.get("german")
+    if german and german != "all":
+        df['German language fluency required'].fillna('N/A')
+        if german == "intermediate":
+            df = df[df['German language fluency required'].str.lower().str.contains("intermediate")]
+        elif german == "yes":
+            df = df[df['German language fluency required'].str.contains("Yes")]
+        elif german == "no":
+            df = df[df['German language fluency required'].str.contains("No")]
+        else: # "Other" selected
+            df = df[
+                ~df['German language fluency required'].str.startswith("Yes") &
+                ~df['German language fluency required'].str.startswith("No")
+            ]
 
     # Remove filenames that have been deleted and sort by last modification date
     # df['file_exists'] = df['Filename'].apply(lambda x: Path(HTML_DIR).joinpath(x).exists())
@@ -77,6 +94,7 @@ def get_jobs(status: str = None, q: str = None):
     
     # TODO: Add more filters, especially for last_mod_time
 
+    q = request.query_params.get("q")
     if q:
         # Simple search across a few key columns
         search_mask = (
