@@ -44,36 +44,48 @@ except Exception as e:
 
 TABLE_NAME = "job_statuses"
 
-def init_db():
+def get_conn_and_exec_func(func):
+    def wrapper(*args, **kwargs):
+        conn = None
+        try:
+            for i in range(5): # Try 5 times max in case DB connection has been closed from the other side
+                conn = DB_POOL.getconn()
+                try:
+                    with conn:
+                        print("get_job_statuses: Connection with database established. Opening cursor.")
+
+                        # Open a cursor to perform database operations
+                        with conn.cursor() as cursor:
+                            return func(conn, cursor, *args, **kwargs)
+                except InterfaceError as e:
+                    print(f"Got InterfaceError: {e} (times: {i + 1}).")
+                    if conn:
+                        print("Discarding the connection from pool and trying another one (max 5 attempts).")
+                        DB_POOL.putconn(conn, close=True)
+
+        except Exception as e:
+            print(f"Error getting job statuses: {e}.")
+        finally:
+            if conn:
+                print("Putting connection back in pool.")
+                DB_POOL.putconn(conn)
+    return wrapper
+
+@get_conn_and_exec_func
+def init_db(conn, cursor):
     """Initializes the database and table if they don't exist."""
-    conn = None
-    try:
-        conn = DB_POOL.getconn()
-        with conn:
-            print("init_db: Connection with database established. Opening cursor.")
-            print(f"Cursor opened. Executing: CREATE TABLE IF NOT EXISTS {TABLE_NAME}")
-            # Open a cursor to perform database operations
-            with conn.cursor() as cursor:
-                
-                # Create a table to store data
-                cursor.execute(f"""
-                CREATE TABLE IF NOT EXISTS {TABLE_NAME} (
-                    filename TEXT PRIMARY KEY,
-                    status TEXT NOT NULL DEFAULT 'new',
-                    last_mod_time TIMESTAMP
-                )
-                """) # TODO: drop last_mod_time column
-                print("Finished creating table (if it didn't exist).")
+    # Create a table to store data
+    cursor.execute(f"""
+    CREATE TABLE IF NOT EXISTS {TABLE_NAME} (
+        filename TEXT PRIMARY KEY,
+        status TEXT NOT NULL DEFAULT 'new',
+        last_mod_time TIMESTAMP
+    )
+    """) # TODO: drop last_mod_time column
+    print("Finished creating table (if it didn't exist).")
 
-                # Commit the changes to the database
-                conn.commit()
-
-    except Exception as e:
-        print(f"Error initializing database: {e}.")
-    finally:
-        if conn:
-            print("Putting connection back in pool.")
-            DB_POOL.putconn(conn)
+    # Commit the changes to the database
+    conn.commit()
 
 def get_last_mod_time(fname: str):
     last_mod_time = None
@@ -83,7 +95,8 @@ def get_last_mod_time(fname: str):
 
     return last_mod_time
 
-def sync_db_with_csv():
+@get_conn_and_exec_func
+def sync_db_with_csv(conn, cursor):
     """Ensures every job in the CSV has an entry in the status database."""
     if not CSV_DB_PATH.exists():
         print(f"Warning: {CSV_DB_PATH} not found. Cannot sync database.")
@@ -92,114 +105,64 @@ def sync_db_with_csv():
     df = pd.read_csv(CSV_DB_PATH)
     filenames = df['Filename'].unique()
 
-    conn = None
-    try:
-        conn = DB_POOL.getconn()
-        with conn:
-            print("sync_db_with_csv: Connection with database established. Opening cursor.")
+    # Find which filenames are not yet in the database
+    print(f"Cursor opened. Executing: SELECT filename FROM {TABLE_NAME}")
+    cursor.execute(f"SELECT filename FROM {TABLE_NAME}")
+    print("Fetching all rows...")
+    existing_files = {row[0] for row in cursor.fetchall()}
+    print("Filenames fetched from DB. Determining new files")
 
-            # Open a cursor to perform database operations
-            with conn.cursor() as cursor:
-                # Find which filenames are not yet in the database
-                print(f"Cursor opened. Executing: SELECT filename FROM {TABLE_NAME}")
-                cursor.execute(f"SELECT filename FROM {TABLE_NAME}")
-                print("Fetching all rows...")
-                existing_files = {row[0] for row in cursor.fetchall()}
-                print("Filenames fetched from DB. Determining new files")
+    new_files = set()
+    # deleted_files = set()
+    for fname in filenames:
+        # if not HTML_DIR.joinpath(fname).exists():
+        #     deleted_files.add(fname)
+        if fname not in existing_files:
+            new_files.add(fname)
+        # elif fname in existing_files and not HTML_DIR.joinpath(fname).exists():
+        #     # Filename is in existing_files but has been deleted from HTML dir
+        #     deleted_files.add(fname)
+    print(f"New files determined. There are {len(new_files)} new files")
 
-                new_files = set()
-                # deleted_files = set()
-                for fname in filenames:
-                    # if not HTML_DIR.joinpath(fname).exists():
-                    #     deleted_files.add(fname)
-                    if fname not in existing_files:
-                        new_files.add(fname)
-                    # elif fname in existing_files and not HTML_DIR.joinpath(fname).exists():
-                    #     # Filename is in existing_files but has been deleted from HTML dir
-                    #     deleted_files.add(fname)
-                print(f"New files determined. There are {len(new_files)} new files")
+    if new_files:
+        # Insert new files with the default 'new' status
+        print("Creating list of tuples to insert")
+        insert_data = [(fname, get_last_mod_time(fname)) for fname in new_files]
+        # insert_data = insert_data[17000:] # ! for testing
+        # print(f"After slicing: There are {len(insert_data)} new files") # ! for testing
+        print("List of tuples created. Running execute_batch")
+        execute_batch(cursor, f"INSERT INTO {TABLE_NAME} (filename, last_mod_time) VALUES (%s, %s)", insert_data)
+        print(f"Added {len(new_files)} new jobs to the database.")
+        conn.commit()
 
-                if new_files:
-                    # Insert new files with the default 'new' status
-                    print("Creating list of tuples to insert")
-                    insert_data = [(fname, get_last_mod_time(fname)) for fname in new_files]
-                    # insert_data = insert_data[17000:] # ! for testing
-                    # print(f"After slicing: There are {len(insert_data)} new files") # ! for testing
-                    print("List of tuples created. Running execute_batch")
-                    execute_batch(cursor, f"INSERT INTO {TABLE_NAME} (filename, last_mod_time) VALUES (%s, %s)", insert_data)
-                    print(f"Added {len(new_files)} new jobs to the database.")
-                    conn.commit()
+    # if deleted_files:
+    #     print("Creating list of tuples to remove deleted files")
+    #     remove_data = [(fname,) for fname in deleted_files]
+    #     print("List of tuples created. Running execute_batch")
+    #     execute_batch(cursor, f"DELETE FROM {TABLE_NAME} WHERE filename = %s", remove_data)
+    #     print(f"Deleted {len(deleted_files)} jobs from the database.")
+    #     conn.commit()
 
-                # if deleted_files:
-                #     print("Creating list of tuples to remove deleted files")
-                #     remove_data = [(fname,) for fname in deleted_files]
-                #     print("List of tuples created. Running execute_batch")
-                #     execute_batch(cursor, f"DELETE FROM {TABLE_NAME} WHERE filename = %s", remove_data)
-                #     print(f"Deleted {len(deleted_files)} jobs from the database.")
-                #     conn.commit()
+    # conn.commit()
 
-                # conn.commit()
-
-    except Exception as e:
-        print(f"Error syncing DB with CSV: {e}.")
-    finally:
-        if conn:
-            print("Putting connection back in pool.")
-            DB_POOL.putconn(conn)
-
-def get_job_statuses() -> dict:
+@get_conn_and_exec_func
+def get_job_statuses(conn, cursor) -> dict:
     """Fetches all job statuses from the DB as a dictionary."""
-    conn = None
-    try:
-        for i in range(5): # Try 5 times max in case DB connection has been closed from the other side
-            conn = DB_POOL.getconn()
-            try:
-                with conn:
-                    print("get_job_statuses: Connection with database established. Opening cursor.")
+    print(f"Cursor opened. Executing: SELECT filename, status FROM {TABLE_NAME}")
+    cursor.execute(f"SELECT filename, status FROM {TABLE_NAME}")
+    statuses = {row[0]: row[1] for row in cursor.fetchall()}
+    return statuses
 
-                    # Open a cursor to perform database operations
-                    with conn.cursor() as cursor:
-                        print(f"Cursor opened. Executing: SELECT filename, status FROM {TABLE_NAME}")
-                        cursor.execute(f"SELECT filename, status FROM {TABLE_NAME}")
-                        statuses = {row[0]: row[1] for row in cursor.fetchall()}
-                        return statuses
-            except InterfaceError as e:
-                print(f"Got InterfaceError: {e} (times: {i + 1}).")
-                if conn:
-                    print("Discarding the connection from pool and trying another one (max 5 attempts).")
-                    DB_POOL.putconn(conn, close=True)
-
-    except Exception as e:
-        print(f"Error getting job statuses: {e}.")
-    finally:
-        if conn:
-            print("Putting connection back in pool.")
-            DB_POOL.putconn(conn)
-
-def update_job_status(filename: str, status: str):
+@get_conn_and_exec_func
+def update_job_status(conn, cursor, filename: str, status: str):
     """Updates the status of a specific job."""
-    conn = None
-    try:
-        conn = DB_POOL.getconn()
-        with conn:
-            print("update_job_status: Connection with database established. Opening cursor.")
-
-            # Open a cursor to perform database operations
-            with conn.cursor() as cursor:
-                print(f"Cursor opened. Executing: UPDATE {TABLE_NAME} SET status = %s WHERE filename = %s")
-                cursor.execute(
-                    f"UPDATE {TABLE_NAME} SET status = %s WHERE filename = %s",
-                    (status, filename)
-                )
-                conn.commit()
-                print(f"Updated {filename} to status '{status}'")
-
-    except Exception as e:
-        print(f"Error updating job status: {e}.")
-    finally:
-        if conn:
-            print("Putting connection back in pool.")
-            DB_POOL.putconn(conn)
+    print(f"Cursor opened. Executing: UPDATE {TABLE_NAME} SET status = %s WHERE filename = %s")
+    cursor.execute(
+        f"UPDATE {TABLE_NAME} SET status = %s WHERE filename = %s",
+        (status, filename)
+    )
+    conn.commit()
+    print(f"Updated {filename} to status '{status}'")
 
 def iso_date_to_days_since_last_mod(iso_date: str) -> int:
     delta_since_date = datetime.now(tz=timezone.utc) - datetime.fromisoformat(iso_date)
