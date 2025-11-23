@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const jobList = document.getElementById('job-list');
     const statusFilter = document.getElementById('status-filter');
     const germanFilter = document.getElementById('german-filter');
+    const seniorityFilter = document.getElementById('seniority-filter');
     const searchBox = document.getElementById('search-box');
     const jobCount = document.getElementById('job-count');
 
@@ -12,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const fetchAndRenderJobs = async () => {
         const status = statusFilter.value;
         const german = germanFilter.value;
+        const seniority = seniorityFilter.value;
         const query = searchBox.value;
 
         // Build the API URL with query parameters
@@ -21,6 +23,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (german && german !== 'all') {
             url.searchParams.append('german', german);
+        }
+        if (seniority && seniority !== 'all') {
+            url.searchParams.append('seniority', seniority);
         }
         if (query) {
             url.searchParams.append('q', query);
@@ -139,6 +144,9 @@ document.addEventListener('DOMContentLoaded', () => {
             row.appendChild(createCell(job['Company name']));
             row.appendChild(createCell(job['Location']));
             row.appendChild(createCell(job_added_date));
+            row.appendChild(createCell(job['Required technical skills']));
+            row.appendChild(createCell(job['Preferred technical skills']));
+            row.appendChild(createCell(job['Other requirements']));
             row.appendChild(createCell(job['Job category']));
 
             jobList.appendChild(row);
@@ -169,6 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Event Listeners for filters
     statusFilter.addEventListener('change', fetchAndRenderJobs);
     germanFilter.addEventListener('change', fetchAndRenderJobs);
+    seniorityFilter.addEventListener('change', fetchAndRenderJobs);
     searchBox.addEventListener('input', () => {
         clearTimeout(searchTimeout);
         // Debounce search input to avoid excessive API calls

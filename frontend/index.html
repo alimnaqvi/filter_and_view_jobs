@@ -12,6 +12,7 @@
 
         <div class="filters">
             <div class="filter-group">
+
                 <label for="status-filter">Status:</label>
                 <select id="status-filter">
                     <option value="all">All</option>
@@ -22,6 +23,7 @@
                     <option value="applied">Applied</option>
                     <option value="archived">Archived</option>
                 </select>
+
                 <label for="german-filter">German required:</label>
                 <select id="german-filter">
                     <option value="all" selected>All</option>
@@ -30,6 +32,19 @@
                     <option value="intermediate">Intermediate</option>
                     <option value="other">Other</option>
                 </select>
+
+                <label for="seniority-filter">Seniority:</label>
+                <select id="seniority-filter">
+                    <option value="all" selected>All</option>
+                    <option value="internship">Internship</option>
+                    <option value="entry">Entry level</option>
+                    <option value="junior">Junior</option>
+                    <option value="mid">Mid</option>
+                    <option value="senior">Senior</option>
+                    <option value="unclear">Unclear/Multiple</option>
+                    <option value="other">Other</option>
+                </select>
+
             </div>
             <div class="filter-group">
                 <label for="search-box">Search:</label>
@@ -51,6 +66,9 @@
                     <th>Company</th>
                     <th>Location</th>
                     <th>Job added time</th>
+                    <th>Required technical skills</th>
+                    <th>Preferred technical skills</th>
+                    <th>Other requirements</th>
                     <th>Job category</th>
                 </tr>
             </thead>
