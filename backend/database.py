@@ -46,8 +46,10 @@ TABLE_NAME = "job_statuses"
 
 def init_db():
     """Initializes the database and table if they don't exist."""
+    conn = None
     try:
-        with DB_POOL.getconn() as conn:
+        conn = DB_POOL.getconn()
+        with conn:
             print("init_db: Connection with database established. Opening cursor.")
             print(f"Cursor opened. Executing: CREATE TABLE IF NOT EXISTS {TABLE_NAME}")
             # Open a cursor to perform database operations
@@ -68,6 +70,10 @@ def init_db():
 
     except Exception as e:
         print(f"Error initializing database: {e}.")
+    finally:
+        if conn:
+            print("Putting connection back in pool.")
+            DB_POOL.putconn(conn)
 
 def get_last_mod_time(fname: str):
     last_mod_time = None
@@ -86,8 +92,10 @@ def sync_db_with_csv():
     df = pd.read_csv(CSV_DB_PATH)
     filenames = df['Filename'].unique()
 
+    conn = None
     try:
-        with DB_POOL.getconn() as conn:
+        conn = DB_POOL.getconn()
+        with conn:
             print("sync_db_with_csv: Connection with database established. Opening cursor.")
 
             # Open a cursor to perform database operations
@@ -134,11 +142,17 @@ def sync_db_with_csv():
 
     except Exception as e:
         print(f"Error syncing DB with CSV: {e}.")
+    finally:
+        if conn:
+            print("Putting connection back in pool.")
+            DB_POOL.putconn(conn)
 
 def get_job_statuses() -> dict:
     """Fetches all job statuses from the DB as a dictionary."""
+    conn = None
     try:
-        with DB_POOL.getconn() as conn:
+        conn = DB_POOL.getconn()
+        with conn:
             print("get_job_statuses: Connection with database established. Opening cursor.")
 
             # Open a cursor to perform database operations
@@ -150,11 +164,17 @@ def get_job_statuses() -> dict:
 
     except Exception as e:
         print(f"Error getting job statuses: {e}.")
+    finally:
+        if conn:
+            print("Putting connection back in pool.")
+            DB_POOL.putconn(conn)
 
 def update_job_status(filename: str, status: str):
     """Updates the status of a specific job."""
+    conn = None
     try:
-        with DB_POOL.getconn() as conn:
+        conn = DB_POOL.getconn()
+        with conn:
             print("update_job_status: Connection with database established. Opening cursor.")
 
             # Open a cursor to perform database operations
@@ -169,6 +189,10 @@ def update_job_status(filename: str, status: str):
 
     except Exception as e:
         print(f"Error updating job status: {e}.")
+    finally:
+        if conn:
+            print("Putting connection back in pool.")
+            DB_POOL.putconn(conn)
 
 def iso_date_to_days_since_last_mod(iso_date: str) -> int:
     delta_since_date = datetime.now(tz=timezone.utc) - datetime.fromisoformat(iso_date)

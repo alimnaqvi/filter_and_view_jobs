@@ -62,7 +62,10 @@ def get_jobs(status: str = None, q: str = None):
     
     # Get statuses from our Postgres DB and merge them into the dataframe
     statuses = database.get_job_statuses()
-    df['status'] = df['Filename'].map(statuses).fillna('new')
+    if statuses:
+        df['status'] = df['Filename'].map(statuses).fillna('new')
+    else:
+        raise HTTPException(status_code=404, detail=f"Unable to get statuses from database. Check connection to database.")
 
     # Apply filters
     if status and status != "all":

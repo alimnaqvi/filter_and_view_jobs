@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const jobCount = document.getElementById('job-count');
 
     let searchTimeout;
-    // TODO: Implement local database cache and add a button to refresh the cache
+    // ? (If slow) Implement local database cache and add a button to refresh the cache
 
     const fetchAndRenderJobs = async () => {
         const status = statusFilter.value;
@@ -79,14 +79,30 @@ document.addEventListener('DOMContentLoaded', () => {
             updateButton.onclick = () => updateStatus(job.Filename, nextStatus);
             actionsCell.appendChild(updateButton);
 
+            // Date added
+            last_mod_date = new Date(job['last_mod_time'])
+            const date_options = {
+                weekday: "short",
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+                timeZoneName: "short",
+                // hourCycle: "h23",
+            };
+            job_added_date = last_mod_date.toLocaleDateString("en-DE", date_options)
 
             row.appendChild(statusCell);
+            row.appendChild(actionsCell);
             row.appendChild(createCell(job['Job title']));
-            row.appendChild(createCell(job['Company name']));
-            row.appendChild(createCell(job['Location']));
             row.appendChild(createCell(job['German language fluency required']));
             row.appendChild(createCell(job['Is tech job']));
-            row.appendChild(actionsCell);
+            row.appendChild(createCell(job['Role seniority']));
+            row.appendChild(createCell(job['Company name']));
+            row.appendChild(createCell(job['Location']));
+            row.appendChild(createCell(job_added_date));
+            row.appendChild(createCell(job['Job category']));
 
             jobList.appendChild(row);
         });
