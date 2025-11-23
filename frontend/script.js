@@ -5,9 +5,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const germanFilter = document.getElementById('german-filter');
     const seniorityFilter = document.getElementById('seniority-filter');
     const searchBox = document.getElementById('search-box');
+    const refCacheBtn = document.getElementById('refcache-button');
     const jobCount = document.getElementById('job-count');
 
     let searchTimeout;
+    let refCache = false;
     // ? (If slow) Implement local database cache and add a button to refresh the cache
 
     const fetchAndRenderJobs = async () => {
@@ -29,6 +31,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (query) {
             url.searchParams.append('q', query);
+        }
+        if (refCache) {
+            url.searchParams.append('refcache', "true");
+            refCache = false;
         }
 
         try {
@@ -178,6 +184,10 @@ document.addEventListener('DOMContentLoaded', () => {
     statusFilter.addEventListener('change', fetchAndRenderJobs);
     germanFilter.addEventListener('change', fetchAndRenderJobs);
     seniorityFilter.addEventListener('change', fetchAndRenderJobs);
+    refCacheBtn.addEventListener('click', () => {
+        refCache = true;
+        fetchAndRenderJobs();
+    });
     searchBox.addEventListener('input', () => {
         clearTimeout(searchTimeout);
         // Debounce search input to avoid excessive API calls

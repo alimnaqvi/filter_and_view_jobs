@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 from pydantic import BaseModel
 from pathlib import Path
 import os
+import time
 from sqlalchemy import create_engine
 
 # Import our database functions
@@ -16,6 +17,10 @@ from backend import database
 BASE_DIR = Path(__file__).resolve().parent
 FRONTEND_DIR = BASE_DIR.parent / "frontend"
 CSV_DB_PATH = database.CSV_DB_PATH
+
+# Full df (of last n days) to avoid generating multiple times
+saved_df = pd.DataFrame()
+df_created_time = time.time()
 
 # Get HTML directory
 try:
@@ -50,22 +55,27 @@ def get_jobs(request: Request):
     API endpoint to get jobs.
     Allows filtering by status and a search query 'q'.
     """
-    print("Request received on /api/jobs")
+    global saved_df
+    global df_created_time
 
-    if not CSV_DB_PATH.exists():
-        raise HTTPException(status_code=404, detail=f"{CSV_DB_PATH.name} not found")
-
-    # df = pd.read_csv(CSV_DB_PATH)
-    df = database.get_df_with_mod_time_remove_deleted(CSV_DB_PATH)
-
-    df = database.get_sorted_df_of_last_n_days(df)
-    
-    # Get statuses from our Postgres DB and merge them into the dataframe
-    statuses = database.get_job_statuses()
-    if statuses:
-        df['status'] = df['Filename'].map(statuses).fillna('new')
+    if saved_df.empty or request.query_params.get("refcache") == "true" or (time.time() - df_created_time > 2 * 60 * 60): # 2 hours
+        print("Creating new df by fetching data from DB")
+        if not CSV_DB_PATH.exists():
+            raise HTTPException(status_code=404, detail=f"{CSV_DB_PATH.name} not found")
+        # df = pd.read_csv(CSV_DB_PATH)
+        saved_df = database.get_df_with_mod_time_remove_deleted(CSV_DB_PATH)
+        saved_df = database.get_sorted_df_of_last_n_days(saved_df)
+        saved_df = saved_df.fillna('N/A')
+        # Get statuses from our Postgres DB and merge them into the dataframe
+        statuses = database.get_job_statuses()
+        if statuses:
+            saved_df['status'] = saved_df['Filename'].map(statuses).fillna('new')
+        else:
+            raise HTTPException(status_code=404, detail=f"Unable to get statuses from database. Check connection to database.")
+        df_created_time = time.time()
     else:
-        raise HTTPException(status_code=404, detail=f"Unable to get statuses from database. Check connection to database.")
+        print("Reusing previously saved df")
+    df = saved_df
 
     # Apply status filter
     status = request.query_params.get("status")
@@ -128,8 +138,6 @@ def get_jobs(request: Request):
             df['Required technical skills'].str.contains(q, case=False, na=False)
         )
         df = df[search_mask]
-    
-    df = df.fillna('N/A')
 
     # Convert DataFrame to a list of dictionaries for JSON response
     return df.to_dict('records')
@@ -137,7 +145,9 @@ def get_jobs(request: Request):
 @app.put("/api/jobs/{filename}/status")
 def update_status(filename: str, status_update: StatusUpdate):
     """API endpoint to update a job's status."""
+    global saved_df
     database.update_job_status(filename, status_update.status)
+    saved_df = pd.DataFrame()
     return {"message": f"Status of {filename} updated to {status_update.status}"}
 
 # --- Static File Serving ---
