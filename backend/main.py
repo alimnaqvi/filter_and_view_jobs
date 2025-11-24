@@ -59,10 +59,11 @@ def get_jobs(request: Request):
     global saved_df
     global df_created_time
 
-    if saved_df.empty or request.query_params.get("refcache") == "true" or (time.time() - df_created_time > 2 * 60 * 60): # 2 hours
+    if saved_df.empty or request.query_params.get("refcache") == "true" or (time.time() - df_created_time > 1 * 60 * 60): # 1 hour
         print("Creating new df by fetching data from DB")
         if not CSV_DB_PATH.exists():
             raise HTTPException(status_code=404, detail=f"{CSV_DB_PATH.name} not found")
+        database.sync_db_with_csv()
         # df = pd.read_csv(CSV_DB_PATH)
         saved_df = database.get_df_with_mod_time_remove_deleted(CSV_DB_PATH)
         saved_df = database.get_sorted_df_of_last_n_days(saved_df)

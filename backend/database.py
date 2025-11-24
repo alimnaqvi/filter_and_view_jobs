@@ -62,9 +62,14 @@ def get_conn_and_exec_func(func):
                     if conn:
                         print("Discarding the connection from pool and trying another one (max 5 attempts).")
                         DB_POOL.putconn(conn, close=True)
+                        conn = None
 
         except Exception as e:
             print(f"Error getting job statuses: {e}.")
+            if conn:
+                print("Discarding the connection from pool.")
+                DB_POOL.putconn(conn)
+                conn = None
         finally:
             if conn:
                 print("Putting connection back in pool.")
