@@ -35,6 +35,23 @@ h1 {
     gap: 8px;
 }
 
+.job-count-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 15px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.job-count {
+    font-style: italic;
+    color: #555;
+}
+
+/* .refcache-btn-container {
+    align-self: end;
+} */
+
 .refcache-button {
     padding: 6px 10px;
     border: none;
@@ -45,7 +62,7 @@ h1 {
     display: inline-block;
     margin-right: 5px;
     font-size: 14px;
-    background-color: #1abc9c;
+    background-color: #457b9d;
 }
 
 .refcache-button:hover { background-color: #16a085; }
@@ -55,12 +72,6 @@ select, input[type="text"] {
     border: 1px solid #ccc;
     border-radius: 4px;
     font-size: 14px;
-}
-
-.job-count {
-    margin-bottom: 15px;
-    font-style: italic;
-    color: #555;
 }
 
 .job-table {
