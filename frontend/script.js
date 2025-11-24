@@ -81,12 +81,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const actionsCell = document.createElement('td');
 
             // Link to the saved HTML file
-            const viewLink = document.createElement('a');
-            viewLink.href = `/jobs/${job.Filename}`; // Served by FastAPI's StaticFiles
-            viewLink.textContent = 'View';
-            viewLink.target = '_blank'; // Open in new tab
-            viewLink.className = 'action-btn btn-view';
-            actionsCell.appendChild(viewLink);
+            const viewBtn = document.createElement('a');
+            viewBtn.href = `/jobs/${job.Filename}`; // Served by FastAPI's StaticFiles
+            viewBtn.textContent = 'View';
+            viewBtn.target = '_blank'; // Open in new tab
+            viewBtn.className = 'action-btn btn-view';
+            actionsCell.appendChild(viewBtn);
 
             // Add dropdown to change status
             // // Label for the dropdown
@@ -98,6 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
             statusArr = ["", "New", "Viewed", "Shortlisted", "Longlisted", "Applied", "Archived"];
             const statusDropdown = document.createElement('select');
             statusDropdown.id = 'change-status-filter';
+            statusDropdown.className = 'change-status-filter';
             statusArr.forEach((item) => {
                 opt = document.createElement('option');
                 opt.value = item.toLowerCase();

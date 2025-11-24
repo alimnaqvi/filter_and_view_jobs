@@ -123,6 +123,14 @@ select, input[type="text"] {
     text-decoration: none;
     display: inline-block;
     margin-right: 5px;
+    margin-bottom: 5px;
+    font-size: 12px;
+    text-align: center;
+}
+
+.change-status-filter {
+    border: none;
+    border-radius: 4px;
     font-size: 12px;
 }
 
