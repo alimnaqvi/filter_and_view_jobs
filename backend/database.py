@@ -83,11 +83,23 @@ def init_db(conn, cursor):
     cursor.execute(f"""
     CREATE TABLE IF NOT EXISTS {TABLE_NAME} (
         filename TEXT PRIMARY KEY,
-        status TEXT NOT NULL DEFAULT 'new',
-        last_mod_time TIMESTAMP
+        status TEXT NOT NULL DEFAULT 'new'
     )
-    """) # TODO: drop last_mod_time column
+    """)
     print("Finished creating table (if it didn't exist).")
+
+    # Commit the changes to the database
+    conn.commit()
+
+@get_conn_and_exec_func
+def drop_column_from_db(conn, cursor, column_name: str):
+    """Drop (permanently delete!) the provided column from the table"""
+    # Create a table to store data
+    cursor.execute(f"""
+    ALTER TABLE {TABLE_NAME}
+    DROP COLUMN IF EXISTS {column_name};
+    """)
+    print(f"Finished dropping column {column_name} (if it didn't exist).")
 
     # Commit the changes to the database
     conn.commit()
@@ -132,11 +144,9 @@ def sync_db_with_csv(conn, cursor):
     if new_files:
         # Insert new files with the default 'new' status
         print("Creating list of tuples to insert")
-        insert_data = [(fname, get_last_mod_time(fname)) for fname in new_files]
-        # insert_data = insert_data[17000:] # ! for testing
-        # print(f"After slicing: There are {len(insert_data)} new files") # ! for testing
+        insert_data = [(fname,) for fname in new_files]
         print("List of tuples created. Running execute_batch")
-        execute_batch(cursor, f"INSERT INTO {TABLE_NAME} (filename, last_mod_time) VALUES (%s, %s)", insert_data)
+        execute_batch(cursor, f"INSERT INTO {TABLE_NAME} (filename) VALUES (%s)", insert_data)
         print(f"Added {len(new_files)} new jobs to the database.")
         conn.commit()
 
@@ -194,7 +204,8 @@ def get_sorted_df_of_last_n_days(input_df: pd.DataFrame, days: float = 7):
 
 def get_df_with_mod_time_remove_deleted(input_csv=CSV_DB_PATH):
     df = pd.read_csv(input_csv)
-    df['last_mod_time'] = df['Filename'].apply(get_last_mod_time)
+    if not 'last_mod_time' in df.columns:
+        df['last_mod_time'] = df['Filename'].apply(get_last_mod_time)
     # get_last_mod_time returns None for non-existent files
     # df['last_mod_time'] = pd.to_datetime(df['last_mod_time'], errors='coerce')
     # print(f"df len before dropping NaT: {len(df.index)}")
