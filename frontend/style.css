@@ -137,5 +137,8 @@ select, input[type="text"] {
 .btn-view { background-color: #1abc9c; }
 .btn-view:hover { background-color: #16a085; }
 
+.btn-url { background-color: blue; }
+.btn-url:hover { background-color: darkblue; }
+
 .btn-update { background-color: #e67e22; }
 .btn-update:hover { background-color: #d35400; }
