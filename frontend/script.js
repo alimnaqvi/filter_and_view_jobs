@@ -7,6 +7,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchBox = document.getElementById('search-box');
     const refCacheBtn = document.getElementById('refcache-button');
     const jobCount = document.getElementById('job-count');
+    // TODO: After adding URL to Gemini DB, show a button to go the original link
+    // Todo: Show dates in different colors?
 
     let searchTimeout;
     let refCache = false;
@@ -81,12 +83,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const actionsCell = document.createElement('td');
 
             // Link to the saved HTML file
-            const viewBtn = document.createElement('a');
-            viewBtn.href = `/jobs/${job.Filename}`; // Served by FastAPI's StaticFiles
-            viewBtn.textContent = 'View';
-            viewBtn.target = '_blank'; // Open in new tab
-            viewBtn.className = 'action-btn btn-view';
-            actionsCell.appendChild(viewBtn);
+            const viewHtmlBtn = document.createElement('a');
+            viewHtmlBtn.href = `/jobs/${job.Filename}`; // Served by FastAPI's StaticFiles
+            viewHtmlBtn.textContent = 'View HTML';
+            viewHtmlBtn.target = '_blank'; // Open in new tab
+            viewHtmlBtn.className = 'action-btn btn-view';
+            actionsCell.appendChild(viewHtmlBtn);
+
+            // Link to original URL
+            if (job['Job URL']) {
+                const viewUrlBtn = document.createElement('a');
+                viewUrlBtn.href = job['Job URL'];
+                viewUrlBtn.textContent = 'Go to URL';
+                viewUrlBtn.target = '_blank'; // Open in new tab
+                viewUrlBtn.className = 'action-btn btn-url';
+                actionsCell.appendChild(viewUrlBtn);
+            }
 
             // Add dropdown to change status
             // // Label for the dropdown
