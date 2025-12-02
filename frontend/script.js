@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
             actionsCell.appendChild(viewHtmlBtn);
 
             // Link to original URL
-            if (job['Job URL']) {
+            if (job['Job URL'] && job['Job URL'] != "N/A") {
                 const viewUrlBtn = document.createElement('a');
                 viewUrlBtn.href = job['Job URL'];
                 viewUrlBtn.textContent = 'Go to URL';
@@ -165,6 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
             row.appendChild(createCell(job_added_date));
             row.appendChild(createCell(job['Required technical skills']));
             row.appendChild(createCell(job['Preferred technical skills']));
+            row.appendChild(createCell(job['Immatrikulation required']));
             row.appendChild(createCell(job['Other requirements']));
             row.appendChild(createCell(job['Job category']));
 
