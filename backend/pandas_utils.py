@@ -8,8 +8,8 @@ def apply_filters_from_params(df: pd.DataFrame, request: Request):
         df = df[df['status'] == status]
 
     # Apply seniority filter
-    seniority = request.query_params.get("seniority")
-    if seniority and seniority != "all":
+    seniority: list = request.query_params.getlist("seniority")
+    if seniority and "all" not in seniority:
         seniority_lower = df['Role seniority'].fillna('N/A').str.lower().str
         internship_mask = (seniority_lower.contains("intern")) | (seniority_lower.contains("praktik"))
         entry_mask = seniority_lower.contains("entry")
@@ -17,35 +17,41 @@ def apply_filters_from_params(df: pd.DataFrame, request: Request):
         mid_mask = (seniority_lower.contains("mid")) | (seniority_lower.contains("medi"))
         senior_mask = seniority_lower.contains("senior")
         unclear_mask = (seniority_lower.contains("unclear")) | (seniority_lower.contains("multiple"))
-        if seniority == "internship":
-            df = df[internship_mask]
-        elif seniority == "entry":
-            df = df[entry_mask]
-        elif seniority == "junior":
-            df = df[junior_mask]
-        elif seniority == "mid":
-            df = df[mid_mask]
-        elif seniority == "senior":
-            df = df[senior_mask]
-        elif seniority == "unclear":
-            df = df[unclear_mask]
-        else: # "Other" selected
-            df = df[~internship_mask & ~entry_mask & ~entry_mask & ~junior_mask & ~mid_mask & ~senior_mask & ~unclear_mask]
+        filter_df = pd.DataFrame()
+        if "internship" in seniority:
+            filter_df = pd.concat([filter_df, df[internship_mask]])
+        if "entry" in seniority:
+            filter_df = pd.concat([filter_df, df[entry_mask]])
+        if "junior" in seniority:
+            filter_df = pd.concat([filter_df, df[junior_mask]])
+        if "mid" in seniority:
+            filter_df = pd.concat([filter_df, df[mid_mask]])
+        if "senior" in seniority:
+            filter_df = pd.concat([filter_df, df[senior_mask]])
+        if "unclear" in seniority:
+            filter_df = pd.concat([filter_df, df[unclear_mask]])
+        if "other" in seniority:
+            filter_df = pd.concat([filter_df, df[~internship_mask & ~entry_mask & ~entry_mask & ~junior_mask & ~mid_mask & ~senior_mask & ~unclear_mask]])
+        # finally modify the original df with applied filters
+        df = filter_df
 
     # Apply german filter
-    german = request.query_params.get("german")
-    if german and german != "all":
+    german = request.query_params.getlist("german")
+    if german and "all" not in german:
         # df['German language fluency required'] = df['German language fluency required'].fillna('N/A')
-        if german == "intermediate":
-            df = df[df['German language fluency required'].str.lower().str.contains("intermediate")]
-        elif german == "yes":
-            df = df[df['German language fluency required'].str.contains("Yes")]
-        elif german == "no":
-            df = df[df['German language fluency required'].str.contains("No")]
-        else: # "Other" selected
-            df = df[
+        filter_df = pd.DataFrame()
+        if "intermediate" in german:
+            filter_df = pd.concat([filter_df, df[df['German language fluency required'].str.lower().str.contains("intermediate")]])
+        if "yes" in german:
+            filter_df = pd.concat([filter_df, df[df['German language fluency required'].str.contains("Yes")]])
+        if "no" in german:
+            filter_df = pd.concat([filter_df, df[df['German language fluency required'].str.contains("No")]])
+        if "other" in german:
+            filter_df = pd.concat([filter_df, df[
                 ~df['German language fluency required'].str.startswith("Yes") &
                 ~df['German language fluency required'].str.startswith("No")
-            ]
+            ]])
+        # finally modify the original df with applied filters
+        df = filter_df
 
     return df

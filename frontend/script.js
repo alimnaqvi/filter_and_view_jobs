@@ -14,10 +14,14 @@ document.addEventListener('DOMContentLoaded', () => {
     let refCache = false;
     // ? (If slow) Implement local database cache and add a button to refresh the cache
 
+    const getSelectedValues = (select) => {
+        return Array.from(select.selectedOptions).map(option => option.value);
+    };
+
     const fetchAndRenderJobs = async () => {
         const status = statusFilter.value;
-        const german = germanFilter.value;
-        const seniority = seniorityFilter.value;
+        const germanValues = getSelectedValues(germanFilter);
+        const seniorityValues = getSelectedValues(seniorityFilter);
         const query = searchBox.value;
 
         // Build the API URL with query parameters
@@ -25,11 +29,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (status && status !== 'all') {
             url.searchParams.append('status', status);
         }
-        if (german && german !== 'all') {
-            url.searchParams.append('german', german);
+        if (germanValues.length && !germanValues.includes('all')) {
+            germanValues.forEach(val => url.searchParams.append('german', val));
         }
-        if (seniority && seniority !== 'all') {
-            url.searchParams.append('seniority', seniority);
+        if (seniorityValues.length && !seniorityValues.includes('all')) {
+            seniorityValues.forEach(val => url.searchParams.append('seniority', val));
         }
         if (query) {
             url.searchParams.append('q', query);

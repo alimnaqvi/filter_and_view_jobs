@@ -74,6 +74,10 @@ select, input[type="text"] {
     font-size: 14px;
 }
 
+select[multiple] {
+    min-height: 150px;
+}
+
 .job-table {
     width: 100%;
     border-collapse: collapse;
