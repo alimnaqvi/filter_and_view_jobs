@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // statusLabel.textContent = 'Change status';
             // actionsCell.appendChild(statusLabel);
             // The dropdown
-            statusArr = ["", "Viewed", "New", "Shortlisted", "Longlisted", "Applied", "Archived"];
+            statusArr = ["", "New", "Viewed", "Shortlisted", "Longlisted", "Applied", "Archived"];
             const statusDropdown = document.createElement('select');
             statusDropdown.id = 'change-status-filter';
             statusDropdown.className = 'change-status-filter';
@@ -143,11 +143,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     opt.textContent = item;
                     opt.onclick = () => {
-                        if (!statusFilter.value.includes(opt.value)) {
+                        if (!statusFilter.value.includes(item.toLowerCase())) {
                             // Immediately make row invisible if the updated status isn't part of the currently selected filter
                             row.style.display = 'none';
                         }
-                        updateStatus(job.Filename, opt.value);
+                        updateStatus(job.Filename, item.toLowerCase());
                     }
                 }
                 statusDropdown.appendChild(opt);
