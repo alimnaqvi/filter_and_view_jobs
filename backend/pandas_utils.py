@@ -1,11 +1,19 @@
 import pandas as pd
 from fastapi import Request
+from datetime import datetime, timezone
 
 def apply_filters_from_params(df: pd.DataFrame, request: Request):
     # Apply status filter
     status = request.query_params.get("status")
     if status and status != "all":
         df = df[df['status'] == status]
+
+    # Apply days since job saved filter
+    try:
+        days = float(request.query_params.get("days"))
+    except Exception:
+        days = 7
+    df = df[pd.Timestamp(datetime.now(tz=timezone.utc)) - df['dt_last_mod_time'] <= pd.Timedelta(days=days)]
 
     # Apply seniority filter
     seniority: list = request.query_params.getlist("seniority")

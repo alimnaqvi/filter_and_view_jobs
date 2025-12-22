@@ -2,6 +2,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const jobList = document.getElementById('job-list');
     const statusFilter = document.getElementById('status-filter');
+    const daysSinceSavedFilter = document.getElementById('time-since-saved-filter');
     const germanFilter = document.getElementById('german-filter');
     const seniorityFilter = document.getElementById('seniority-filter');
     const searchBox = document.getElementById('search-box');
@@ -20,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const fetchAndRenderJobs = async () => {
         const status = statusFilter.value;
+        const daysSinceSaved = daysSinceSavedFilter.value;
         const germanValues = getSelectedValues(germanFilter);
         const seniorityValues = getSelectedValues(seniorityFilter);
         const query = searchBox.value;
@@ -28,6 +30,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const url = new URL('/api/jobs', window.location.origin);
         if (status && status !== 'all') {
             url.searchParams.append('status', status);
+        }
+        if (daysSinceSaved) {
+            url.searchParams.append('days', daysSinceSaved);
         }
         if (germanValues.length && !germanValues.includes('all')) {
             germanValues.forEach(val => url.searchParams.append('german', val));
@@ -221,6 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Event Listeners for filters
     statusFilter.addEventListener('change', fetchAndRenderJobs);
+    daysSinceSavedFilter.addEventListener('change', fetchAndRenderJobs);
     germanFilter.addEventListener('change', fetchAndRenderJobs);
     seniorityFilter.addEventListener('change', fetchAndRenderJobs);
     refCacheBtn.addEventListener('click', () => {
