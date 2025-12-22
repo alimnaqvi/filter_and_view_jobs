@@ -91,6 +91,9 @@ def get_jobs(request: Request):
         )
         df = df[search_mask]
 
+    # Sort the df by `last_mod_time` column (previously converted to pd.Timestamp), latest entry first
+    df = df.sort_values(by=['dt_last_mod_time'], ascending=False, ignore_index=True)
+
     # Convert DataFrame to a list of dictionaries for JSON response
     return df.to_dict('records')
 

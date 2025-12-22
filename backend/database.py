@@ -198,6 +198,7 @@ def get_sorted_df_of_last_n_days(input_df: pd.DataFrame, days: float = 7):
 
     # output_df = input_df[input_df['days_since_last_mod'] <= 7]
 
+    # TODO: This is not strictly needed since df will be sorted again at the end (after filtering)
     output_df = output_df.sort_values(by=['dt_last_mod_time'], ascending=False, ignore_index=True)
 
     return output_df
