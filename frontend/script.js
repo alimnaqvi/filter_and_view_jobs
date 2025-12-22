@@ -104,6 +104,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 actionsCell.appendChild(viewUrlBtn);
             }
 
+            // Button to quickly mark as viewed
+            if (job.status === 'new') {
+                const viewedBtn = document.createElement('a');
+                viewedBtn.textContent = 'Viewed';
+                viewedBtn.className = 'action-btn btn-viewed';
+                viewedBtn.onclick = () => {
+                    if (!statusFilter.value.includes('viewed')) {
+                        // Immediately make row invisible if the updated status isn't part of the currently selected filter
+                        row.style.display = 'none';
+                    }
+                    updateStatus(job.Filename, 'viewed');
+                }
+                actionsCell.appendChild(viewedBtn);
+            }
+
             // Add dropdown to change status
             // // Label for the dropdown
             // const statusLabel = document.createElement('label');
@@ -111,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // statusLabel.textContent = 'Change status';
             // actionsCell.appendChild(statusLabel);
             // The dropdown
-            statusArr = ["", "New", "Viewed", "Shortlisted", "Longlisted", "Applied", "Archived"];
+            statusArr = ["", "Viewed", "New", "Shortlisted", "Longlisted", "Applied", "Archived"];
             const statusDropdown = document.createElement('select');
             statusDropdown.id = 'change-status-filter';
             statusDropdown.className = 'change-status-filter';
@@ -122,7 +137,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     opt.textContent = "Change status"
                 } else {
                     opt.textContent = item;
-                    opt.onclick = () => updateStatus(job.Filename, item.toLowerCase());
+                    opt.onclick = () => {
+                        if (!statusFilter.value.includes(opt.value)) {
+                            // Immediately make row invisible if the updated status isn't part of the currently selected filter
+                            row.style.display = 'none';
+                        }
+                        updateStatus(job.Filename, opt.value);
+                    }
                 }
                 statusDropdown.appendChild(opt);
             });

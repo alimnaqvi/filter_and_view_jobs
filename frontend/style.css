@@ -144,5 +144,8 @@ select[multiple] {
 .btn-url { background-color: blue; }
 .btn-url:hover { background-color: darkblue; }
 
+.btn-viewed { background-color: red; }
+.btn-viewed:hover { background-color: darkred; }
+
 .btn-update { background-color: #e67e22; }
 .btn-update:hover { background-color: #d35400; }
