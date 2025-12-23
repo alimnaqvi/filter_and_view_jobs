@@ -105,6 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 viewUrlBtn.href = job['Job URL'];
                 viewUrlBtn.textContent = 'Go to URL';
                 viewUrlBtn.target = '_blank'; // Open in new tab
+                viewUrlBtn.rel = 'noreferrer noopener' // tell the browser not to send the Referer header
                 viewUrlBtn.className = 'action-btn btn-url';
                 actionsCell.appendChild(viewUrlBtn);
             }
