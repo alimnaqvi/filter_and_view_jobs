@@ -189,6 +189,8 @@ document.addEventListener('DOMContentLoaded', () => {
             row.appendChild(actionsCell);
             row.appendChild(createCell(job['Job title']));
             row.appendChild(createCell(job['German language fluency required']));
+            row.appendChild(createCell(job['Job description language']));
+            row.appendChild(createCell(job['English proficiency mentioned']));
             row.appendChild(createCell(job['Is tech job']));
             row.appendChild(createCell(job['Role seniority']));
             row.appendChild(createCell(job['Company name']));
@@ -196,8 +198,11 @@ document.addEventListener('DOMContentLoaded', () => {
             row.appendChild(createCell(job_added_date));
             row.appendChild(createCell(job['Required technical skills']));
             row.appendChild(createCell(job['Preferred technical skills']));
+            row.appendChild(createCell(job['Other skills mentioned']));
             row.appendChild(createCell(job['Immatrikulation required']));
+            row.appendChild(createCell(job['Experience mentioned']));
             row.appendChild(createCell(job['Other requirements']));
+            row.appendChild(createCell(job['Tech stack']));
             row.appendChild(createCell(job['Job category']));
 
             jobList.appendChild(row);
