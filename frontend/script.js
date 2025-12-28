@@ -18,20 +18,20 @@ document.addEventListener('DOMContentLoaded', () => {
         { header: 'Actions', type: 'actions' },
         { header: 'Job Title', key: 'Job title' },
         { header: 'German required', key: 'German language fluency required' },
-        { header: 'Job description language', key: 'Job description language' },
-        { header: 'English proficiency mentioned', key: 'English proficiency mentioned' },
+        { header: 'Job description language', key: 'Job description language', className: 'col-narrow' },
+        { header: 'English proficiency mentioned', key: 'English proficiency mentioned', className: 'col-narrow' },
         { header: 'Is tech job', key: 'Is tech job' },
         { header: 'Role seniority', key: 'Role seniority' },
         { header: 'Company', key: 'Company name' },
         { header: 'Location', key: 'Location' },
         { header: 'Job added time', key: 'last_mod_time', type: 'date' },
-        { header: 'Required technical skills', key: 'Required technical skills' },
-        { header: 'Preferred technical skills', key: 'Preferred technical skills' },
-        { header: 'Other skills mentioned', key: 'Other skills mentioned' },
-        { header: 'Immatrikulation required', key: 'Immatrikulation required' },
+        { header: 'Required technical skills', key: 'Required technical skills', className: 'col-wide' },
+        { header: 'Preferred technical skills', key: 'Preferred technical skills', className: 'col-wide' },
+        { header: 'Other skills mentioned', key: 'Other skills mentioned', className: 'col-wide' },
+        { header: 'Immatrikulation required', key: 'Immatrikulation required', className: 'col-narrow' },
         { header: 'Experience mentioned', key: 'Experience mentioned' },
         { header: 'Other requirements', key: 'Other requirements' },
-        { header: 'Tech stack', key: 'Tech stack' },
+        { header: 'Tech stack', key: 'Tech stack', className: 'col-wide' },
         { header: 'Job category', key: 'Job category' }
     ];
 
@@ -91,6 +91,9 @@ document.addEventListener('DOMContentLoaded', () => {
         columns.forEach(col => {
             const th = document.createElement('th');
             th.textContent = col.header;
+            if (col.className) {
+                th.classList.add(col.className);
+            }
             tableHeaderRow.appendChild(th);
         });
     };
@@ -176,15 +179,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const row = document.createElement('tr');
             
             columns.forEach(col => {
+                let cell;
                 if (col.type === 'status') {
-                    const statusCell = document.createElement('td');
+                    cell = document.createElement('td');
                     const statusClass = `status-${job.status || 'default'}`;
-                    statusCell.innerHTML = `<span class="status-badge ${statusClass}">${job.status}</span>`;
-                    row.appendChild(statusCell);
+                    cell.innerHTML = `<span class="status-badge ${statusClass}">${job.status}</span>`;
                 } else if (col.type === 'actions') {
-                    const actionsCell = document.createElement('td');
-                    renderActions(actionsCell, job, row);
-                    row.appendChild(actionsCell);
+                    cell = document.createElement('td');
+                    renderActions(cell, job, row);
                 } else if (col.type === 'date') {
                     const last_mod_date = new Date(job[col.key]);
                     const date_options = {
@@ -197,10 +199,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         timeZoneName: "short",
                     };
                     const dateStr = last_mod_date.toLocaleDateString("en-DE", date_options);
-                    row.appendChild(createCell(dateStr));
+                    cell = createCell(dateStr);
                 } else {
-                    row.appendChild(createCell(job[col.key]));
+                    cell = createCell(job[col.key]);
                 }
+
+                if (col.className) {
+                    cell.classList.add(col.className);
+                }
+                row.appendChild(cell);
             });
 
             jobList.appendChild(row);

@@ -100,6 +100,16 @@ select[multiple] {
     white-space: nowrap; /* Keep headers on one line */
 }
 
+.job-table th.col-narrow {
+    white-space: normal;
+    width: 120px;
+    min-width: 100px;
+}
+
+.job-table th.col-wide, .job-table td.col-wide {
+    min-width: 300px;
+}
+
 .job-table tr:hover {
     background-color: #f9f9f9;
 }
