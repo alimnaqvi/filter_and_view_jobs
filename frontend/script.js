@@ -1,6 +1,7 @@
 // frontend/script.js
 document.addEventListener('DOMContentLoaded', () => {
     const jobList = document.getElementById('job-list');
+    const tableHeaderRow = document.getElementById('table-header-row');
     const statusFilter = document.getElementById('status-filter');
     const daysSinceSavedFilter = document.getElementById('time-since-saved-filter');
     const germanFilter = document.getElementById('german-filter');
@@ -10,6 +11,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const jobCount = document.getElementById('job-count');
     // TODO: After adding URL to Gemini DB, show a button to go the original link
     // Todo: Show dates in different colors?
+
+    // Define table columns configuration
+    const columns = [
+        { header: 'Status', type: 'status' },
+        { header: 'Actions', type: 'actions' },
+        { header: 'Job Title', key: 'Job title' },
+        { header: 'German required', key: 'German language fluency required' },
+        { header: 'Job description language', key: 'Job description language' },
+        { header: 'English proficiency mentioned', key: 'English proficiency mentioned' },
+        { header: 'Is tech job', key: 'Is tech job' },
+        { header: 'Role seniority', key: 'Role seniority' },
+        { header: 'Company', key: 'Company name' },
+        { header: 'Location', key: 'Location' },
+        { header: 'Job added time', key: 'last_mod_time', type: 'date' },
+        { header: 'Required technical skills', key: 'Required technical skills' },
+        { header: 'Preferred technical skills', key: 'Preferred technical skills' },
+        { header: 'Other skills mentioned', key: 'Other skills mentioned' },
+        { header: 'Immatrikulation required', key: 'Immatrikulation required' },
+        { header: 'Experience mentioned', key: 'Experience mentioned' },
+        { header: 'Other requirements', key: 'Other requirements' },
+        { header: 'Tech stack', key: 'Tech stack' },
+        { header: 'Job category', key: 'Job category' }
+    ];
 
     let searchTimeout;
     let refCache = false;
@@ -62,11 +86,86 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const renderHeaders = () => {
+        tableHeaderRow.innerHTML = '';
+        columns.forEach(col => {
+            const th = document.createElement('th');
+            th.textContent = col.header;
+            tableHeaderRow.appendChild(th);
+        });
+    };
+
+    const createCell = (text) => {
+        const cell = document.createElement('td');
+        cell.textContent = text || 'N/A'; // Handle empty values
+        return cell;
+    };
+
+    const renderActions = (actionsCell, job, row) => {
+        // Link to the saved HTML file
+        const viewHtmlBtn = document.createElement('a');
+        viewHtmlBtn.href = `/jobs/${job.Filename}`; // Served by FastAPI's StaticFiles
+        viewHtmlBtn.textContent = 'View HTML';
+        viewHtmlBtn.target = '_blank'; // Open in new tab
+        viewHtmlBtn.className = 'action-btn btn-view';
+        actionsCell.appendChild(viewHtmlBtn);
+
+        // Link to original URL
+        if (job['Job URL'] && job['Job URL'] != "N/A") {
+            const viewUrlBtn = document.createElement('a');
+            viewUrlBtn.href = job['Job URL'];
+            viewUrlBtn.textContent = 'Go to URL';
+            viewUrlBtn.target = '_blank'; // Open in new tab
+            viewUrlBtn.rel = 'noreferrer noopener' // tell the browser not to send the Referer header
+            viewUrlBtn.className = 'action-btn btn-url';
+            actionsCell.appendChild(viewUrlBtn);
+        }
+
+        // Button to quickly mark as viewed
+        if (job.status === 'new') {
+            const viewedBtn = document.createElement('a');
+            viewedBtn.textContent = 'Viewed';
+            viewedBtn.className = 'action-btn btn-viewed';
+            viewedBtn.onclick = () => {
+                if (!statusFilter.value.includes('viewed')) {
+                    // Immediately make row invisible if the updated status isn't part of the currently selected filter
+                    row.style.display = 'none';
+                }
+                updateStatus(job.Filename, 'viewed');
+            }
+            actionsCell.appendChild(viewedBtn);
+        }
+
+        // Add dropdown to change status
+        const statusArr = ["", "New", "Viewed", "Shortlisted", "Longlisted", "Applied", "Archived"];
+        const statusDropdown = document.createElement('select');
+        statusDropdown.id = 'change-status-filter';
+        statusDropdown.className = 'change-status-filter';
+        statusArr.forEach((item) => {
+            const opt = document.createElement('option');
+            opt.value = item.toLowerCase();
+            if (item === "") {
+                opt.textContent = "Change status"
+            } else {
+                opt.textContent = item;
+                opt.onclick = () => {
+                    if (!statusFilter.value.includes(item.toLowerCase())) {
+                        // Immediately make row invisible if the updated status isn't part of the currently selected filter
+                        row.style.display = 'none';
+                    }
+                    updateStatus(job.Filename, item.toLowerCase());
+                }
+            }
+            statusDropdown.appendChild(opt);
+        });
+        actionsCell.appendChild(statusDropdown);
+    };
+
     const renderJobs = (jobs) => {
         jobList.innerHTML = ''; // Clear existing list
 
         if (jobs.length === 0) {
-            jobList.innerHTML = `<tr><td colspan="6" style="text-align: center;">No jobs found.</td></tr>`;
+            jobList.innerHTML = `<tr><td colspan="${columns.length}" style="text-align: center;">No jobs found.</td></tr>`;
             jobCount.textContent = '0 jobs found.';
             return;
         }
@@ -76,134 +175,33 @@ document.addEventListener('DOMContentLoaded', () => {
         jobs.forEach(job => {
             const row = document.createElement('tr');
             
-            // Status Badge
-            const statusCell = document.createElement('td');
-            const statusClass = `status-${job.status || 'default'}`;
-            statusCell.innerHTML = `<span class="status-badge ${statusClass}">${job.status}</span>`;
-
-            // Simple cell for other data
-            const createCell = (text) => {
-                const cell = document.createElement('td');
-                cell.textContent = text || 'N/A'; // Handle empty values
-                return cell;
-            };
-
-            // Actions Cell
-            const actionsCell = document.createElement('td');
-
-            // Link to the saved HTML file
-            const viewHtmlBtn = document.createElement('a');
-            viewHtmlBtn.href = `/jobs/${job.Filename}`; // Served by FastAPI's StaticFiles
-            viewHtmlBtn.textContent = 'View HTML';
-            viewHtmlBtn.target = '_blank'; // Open in new tab
-            viewHtmlBtn.className = 'action-btn btn-view';
-            actionsCell.appendChild(viewHtmlBtn);
-
-            // Link to original URL
-            if (job['Job URL'] && job['Job URL'] != "N/A") {
-                const viewUrlBtn = document.createElement('a');
-                viewUrlBtn.href = job['Job URL'];
-                viewUrlBtn.textContent = 'Go to URL';
-                viewUrlBtn.target = '_blank'; // Open in new tab
-                viewUrlBtn.rel = 'noreferrer noopener' // tell the browser not to send the Referer header
-                viewUrlBtn.className = 'action-btn btn-url';
-                actionsCell.appendChild(viewUrlBtn);
-            }
-
-            // Button to quickly mark as viewed
-            if (job.status === 'new') {
-                const viewedBtn = document.createElement('a');
-                viewedBtn.textContent = 'Viewed';
-                viewedBtn.className = 'action-btn btn-viewed';
-                viewedBtn.onclick = () => {
-                    if (!statusFilter.value.includes('viewed')) {
-                        // Immediately make row invisible if the updated status isn't part of the currently selected filter
-                        row.style.display = 'none';
-                    }
-                    updateStatus(job.Filename, 'viewed');
-                }
-                actionsCell.appendChild(viewedBtn);
-            }
-
-            // Add dropdown to change status
-            // // Label for the dropdown
-            // const statusLabel = document.createElement('label');
-            // statusLabel.for = 'change-status-filter';
-            // statusLabel.textContent = 'Change status';
-            // actionsCell.appendChild(statusLabel);
-            // The dropdown
-            statusArr = ["", "New", "Viewed", "Shortlisted", "Longlisted", "Applied", "Archived"];
-            const statusDropdown = document.createElement('select');
-            statusDropdown.id = 'change-status-filter';
-            statusDropdown.className = 'change-status-filter';
-            statusArr.forEach((item) => {
-                opt = document.createElement('option');
-                opt.value = item.toLowerCase();
-                if (item === "") {
-                    opt.textContent = "Change status"
+            columns.forEach(col => {
+                if (col.type === 'status') {
+                    const statusCell = document.createElement('td');
+                    const statusClass = `status-${job.status || 'default'}`;
+                    statusCell.innerHTML = `<span class="status-badge ${statusClass}">${job.status}</span>`;
+                    row.appendChild(statusCell);
+                } else if (col.type === 'actions') {
+                    const actionsCell = document.createElement('td');
+                    renderActions(actionsCell, job, row);
+                    row.appendChild(actionsCell);
+                } else if (col.type === 'date') {
+                    const last_mod_date = new Date(job[col.key]);
+                    const date_options = {
+                        weekday: "short",
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        timeZoneName: "short",
+                    };
+                    const dateStr = last_mod_date.toLocaleDateString("en-DE", date_options);
+                    row.appendChild(createCell(dateStr));
                 } else {
-                    opt.textContent = item;
-                    opt.onclick = () => {
-                        if (!statusFilter.value.includes(item.toLowerCase())) {
-                            // Immediately make row invisible if the updated status isn't part of the currently selected filter
-                            row.style.display = 'none';
-                        }
-                        updateStatus(job.Filename, item.toLowerCase());
-                    }
+                    row.appendChild(createCell(job[col.key]));
                 }
-                statusDropdown.appendChild(opt);
             });
-            actionsCell.appendChild(statusDropdown);
-            
-            // // Add buttons to change view status
-            // const viewStatus = (job.status === 'new') ? 'viewed' : 'new';
-            // const updateViewedButton = document.createElement('button');
-            // updateViewedButton.textContent = `Mark as ${viewStatus}`;
-            // updateViewedButton.className = 'action-btn btn-update';
-            // updateViewedButton.onclick = () => updateStatus(job.Filename, viewStatus);
-            // actionsCell.appendChild(updateViewedButton);
-
-            // // Add buttons to change shortlist status
-            // const shortlistStatus = (job.status !== 'shortlisted') ? 'shortlisted' : 'new';
-            // const updateShortlistedButton = document.createElement('button');
-            // updateShortlistedButton.textContent = `Mark as ${shortlistStatus}`;
-            // updateShortlistedButton.className = 'action-btn btn-update';
-            // updateShortlistedButton.onclick = () => updateStatus(job.Filename, shortlistStatus);
-            // actionsCell.appendChild(updateShortlistedButton);
-
-            // Date added
-            last_mod_date = new Date(job['last_mod_time'])
-            const date_options = {
-                weekday: "short",
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-                timeZoneName: "short",
-                // hourCycle: "h23",
-            };
-            job_added_date = last_mod_date.toLocaleDateString("en-DE", date_options)
-
-            row.appendChild(statusCell);
-            row.appendChild(actionsCell);
-            row.appendChild(createCell(job['Job title']));
-            row.appendChild(createCell(job['German language fluency required']));
-            row.appendChild(createCell(job['Job description language']));
-            row.appendChild(createCell(job['English proficiency mentioned']));
-            row.appendChild(createCell(job['Is tech job']));
-            row.appendChild(createCell(job['Role seniority']));
-            row.appendChild(createCell(job['Company name']));
-            row.appendChild(createCell(job['Location']));
-            row.appendChild(createCell(job_added_date));
-            row.appendChild(createCell(job['Required technical skills']));
-            row.appendChild(createCell(job['Preferred technical skills']));
-            row.appendChild(createCell(job['Other skills mentioned']));
-            row.appendChild(createCell(job['Immatrikulation required']));
-            row.appendChild(createCell(job['Experience mentioned']));
-            row.appendChild(createCell(job['Other requirements']));
-            row.appendChild(createCell(job['Tech stack']));
-            row.appendChild(createCell(job['Job category']));
 
             jobList.appendChild(row);
         });
@@ -246,5 +244,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Initial load
+    renderHeaders();
     fetchAndRenderJobs();
 });
