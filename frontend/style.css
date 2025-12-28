@@ -8,7 +8,8 @@ body {
 }
 
 .container {
-    max-width: 90vw;
+    width: fit-content; /* Allow container to grow with table */
+    min-width: 90vw;    /* But keep it wide enough on large screens */
     margin: 0 auto;
     background-color: #fff;
     padding: 20px;
@@ -81,9 +82,7 @@ select[multiple] {
 .job-table {
     width: 100%;
     border-collapse: collapse;
-    overflow: auto;
-    max-width: 90vw;
-    display: block;
+    /* Removed overflow, max-width, display: block, and max-height to allow body scrolling */
 }
 
 .job-table th, .job-table td {
@@ -94,6 +93,11 @@ select[multiple] {
 
 .job-table th {
     background-color: #f2f2f2;
+    position: sticky; /* Stick to the top */
+    top: 0;
+    z-index: 10; /* Ensure it stays above the rows */
+    box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.2); /* Add a subtle shadow */
+    white-space: nowrap; /* Keep headers on one line */
 }
 
 .job-table tr:hover {
@@ -149,3 +153,13 @@ select[multiple] {
 
 .btn-update { background-color: #e67e22; }
 .btn-update:hover { background-color: #d35400; }
+
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+    .container {
+        padding: 10px;
+        min-width: 95vw;
+    }
+}
