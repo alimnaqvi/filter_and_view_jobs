@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from pathlib import Path
 import os
 import time
+from urllib.parse import urlparse
 # from sqlalchemy import create_engine
 
 # Import our database and utility functions
@@ -68,6 +69,10 @@ def get_jobs(request: Request):
         saved_df = database.get_df_with_mod_time_remove_deleted(CSV_DB_PATH)
         saved_df = database.get_sorted_df_of_last_n_days(saved_df)
         saved_df = saved_df.fillna('N/A')
+        # Add a 'domain' column based on the URL domain
+        saved_df['domain'] = saved_df['Job URL'].apply(lambda url: urlparse(url).hostname if pd.notna(url) else 'N/A')
+        # If domain is none of linkedin, stepstone, kununu, and arbeitsagentur, classify as 'other'
+        saved_df['source'] = saved_df['domain'].apply(lambda x: x if any(sub in (x or '').lower() for sub in ['linkedin', 'stepstone', 'kununu', 'arbeitsagentur']) else 'other')
         # Get statuses from our Postgres DB and merge them into the dataframe
         statuses = database.get_job_statuses()
         if statuses:

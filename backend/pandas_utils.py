@@ -67,15 +67,26 @@ def apply_filters_from_params(df: pd.DataFrame, request: Request):
         df = df[combined_mask]
 
     # Apply JD language filter
-    jd_language = request.query_params.get("jd-language")
-    if jd_language and jd_language != "all":
-        jd_language_lower = df['Job description language'].fillna('N/A').str.lower()
-        if jd_language == "english":
-            df = df[jd_language_lower.str.contains("english")]
-        elif jd_language == "german":
-            df = df[jd_language_lower.str.contains("german")]
-        elif jd_language == "other":
-            df = df[~(jd_language_lower.str.contains("english") | jd_language_lower.str.contains("german"))]
+    jd_language_param = request.query_params.get("jd-language")
+    if jd_language_param and jd_language_param != "all":
+        jd_language_lower_col = df['Job description language'].fillna('N/A').str.lower()
+        if jd_language_param == "english":
+            df = df[jd_language_lower_col.str.contains("english")]
+        elif jd_language_param == "german":
+            df = df[jd_language_lower_col.str.contains("german")]
+        elif jd_language_param == "other":
+            df = df[~(jd_language_lower_col.str.contains("english") | jd_language_lower_col.str.contains("german"))]
+
+    # Apply source filter
+    source_param = request.query_params.getlist("source")
+    if source_param and "all" not in source_param:
+        combined_mask = pd.Series([False] * len(df), index=df.index)
+
+        for src in source_param:
+            src_lower = src.lower()
+            combined_mask |= df['source'].str.contains(src_lower)
+        
+        df = df[combined_mask]
 
     df = df.drop_duplicates().reset_index(drop=True)
 

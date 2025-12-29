@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const daysSinceSavedFilter = document.getElementById('time-since-saved-filter');
     const germanFilter = document.getElementById('german-filter');
     const seniorityFilter = document.getElementById('seniority-filter');
+    const sourceFilter = document.getElementById('source-filter');
     const searchBox = document.getElementById('search-box');
     const refCacheBtn = document.getElementById('refcache-button');
     const jobCount = document.getElementById('job-count');
@@ -26,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { header: 'Company', key: 'Company name' },
         { header: 'Location', key: 'Location' },
         { header: 'Job added time', key: 'last_mod_time', type: 'date' },
+        { header: 'Source', key: 'domain', className: 'col-narrow' },
         { header: 'Required technical skills', key: 'Required technical skills', className: 'col-wide' },
         { header: 'Preferred technical skills', key: 'Preferred technical skills', className: 'col-wide' },
         { header: 'Other skills mentioned', key: 'Other skills mentioned', className: 'col-wide' },
@@ -50,6 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const daysSinceSaved = daysSinceSavedFilter.value;
         const germanValues = getSelectedValues(germanFilter);
         const seniorityValues = getSelectedValues(seniorityFilter);
+        const sourceValues = getSelectedValues(sourceFilter);
         const query = searchBox.value;
 
         // Build the API URL with query parameters
@@ -68,6 +71,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (seniorityValues.length && !seniorityValues.includes('all')) {
             seniorityValues.forEach(val => url.searchParams.append('seniority', val));
+        }
+        if (sourceValues.length && !sourceValues.includes('all')) {
+            sourceValues.forEach(val => url.searchParams.append('source', val));
         }
         if (query) {
             url.searchParams.append('q', query);
@@ -245,6 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
     daysSinceSavedFilter.addEventListener('change', fetchAndRenderJobs);
     germanFilter.addEventListener('change', fetchAndRenderJobs);
     seniorityFilter.addEventListener('change', fetchAndRenderJobs);
+    sourceFilter.addEventListener('change', fetchAndRenderJobs);
     jdLanguageFilter.addEventListener('change', fetchAndRenderJobs);
     refCacheBtn.addEventListener('click', () => {
         refCache = true;
