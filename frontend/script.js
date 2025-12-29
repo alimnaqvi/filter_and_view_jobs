@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const jobList = document.getElementById('job-list');
     const tableHeaderRow = document.getElementById('table-header-row');
     const statusFilter = document.getElementById('status-filter');
+    const jdLanguageFilter = document.getElementById('jd-language-filter');
     const daysSinceSavedFilter = document.getElementById('time-since-saved-filter');
     const germanFilter = document.getElementById('german-filter');
     const seniorityFilter = document.getElementById('seniority-filter');
@@ -45,6 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const fetchAndRenderJobs = async () => {
         const status = statusFilter.value;
+        const jdLanguage = jdLanguageFilter.value;
         const daysSinceSaved = daysSinceSavedFilter.value;
         const germanValues = getSelectedValues(germanFilter);
         const seniorityValues = getSelectedValues(seniorityFilter);
@@ -54,6 +56,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const url = new URL('/api/jobs', window.location.origin);
         if (status && status !== 'all') {
             url.searchParams.append('status', status);
+        }
+        if (jdLanguage && jdLanguage !== 'all') {
+            url.searchParams.append('jd-language', jdLanguage);
         }
         if (daysSinceSaved) {
             url.searchParams.append('days', daysSinceSaved);
@@ -240,6 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
     daysSinceSavedFilter.addEventListener('change', fetchAndRenderJobs);
     germanFilter.addEventListener('change', fetchAndRenderJobs);
     seniorityFilter.addEventListener('change', fetchAndRenderJobs);
+    jdLanguageFilter.addEventListener('change', fetchAndRenderJobs);
     refCacheBtn.addEventListener('click', () => {
         refCache = true;
         fetchAndRenderJobs();

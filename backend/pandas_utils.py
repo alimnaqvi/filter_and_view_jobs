@@ -66,6 +66,17 @@ def apply_filters_from_params(df: pd.DataFrame, request: Request):
         
         df = df[combined_mask]
 
+    # Apply JD language filter
+    jd_language = request.query_params.get("jd-language")
+    if jd_language and jd_language != "all":
+        jd_language_lower = df['Job description language'].fillna('N/A').str.lower()
+        if jd_language == "english":
+            df = df[jd_language_lower.str.contains("english")]
+        elif jd_language == "german":
+            df = df[jd_language_lower.str.contains("german")]
+        elif jd_language == "other":
+            df = df[~(jd_language_lower.str.contains("english") | jd_language_lower.str.contains("german"))]
+
     df = df.drop_duplicates().reset_index(drop=True)
 
     return df
