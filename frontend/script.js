@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { header: 'Company', key: 'Company name' },
         { header: 'Location', key: 'Location' },
         { header: 'Job added time', key: 'last_mod_time', type: 'date' },
+        { header: 'Job posted time', key: 'Job posted time', type: 'date' },
         { header: 'Source', key: 'domain', className: 'col-narrow' },
         { header: 'Required technical skills', key: 'Required technical skills', className: 'col-wide' },
         { header: 'Preferred technical skills', key: 'Preferred technical skills', className: 'col-wide' },
@@ -199,17 +200,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     cell = document.createElement('td');
                     renderActions(cell, job, row);
                 } else if (col.type === 'date') {
-                    const last_mod_date = new Date(job[col.key]);
-                    const date_options = {
-                        weekday: "short",
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        timeZoneName: "short",
-                    };
-                    const dateStr = last_mod_date.toLocaleDateString("en-DE", date_options);
+                    let dateStr;
+                    if (job[col.key]) {
+                        const last_mod_date = new Date(job[col.key]);
+                        if (!isNaN(last_mod_date.getTime())) {
+                            const date_options = {
+                                weekday: "short",
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                timeZoneName: "short",
+                            };
+                            dateStr = last_mod_date.toLocaleDateString("en-DE", date_options);
+                        }
+                    }
                     cell = createCell(dateStr);
                 } else {
                     cell = createCell(job[col.key]);
