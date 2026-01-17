@@ -23,7 +23,7 @@ def apply_filters_from_params(df: pd.DataFrame, request: Request):
         combined_mask = pd.Series([False] * len(df), index=df.index)
 
         internship_mask = (seniority_lower.contains("intern")) | (seniority_lower.contains("praktik"))
-        entry_mask = seniority_lower.contains("entry")
+        entry_mask = (seniority_lower.contains("entry")) & (seniority_lower.contains("full"))
         junior_mask = seniority_lower.contains("junior")
         mid_mask = (seniority_lower.contains("mid")) | (seniority_lower.contains("medi"))
         senior_mask = seniority_lower.contains("senior")
