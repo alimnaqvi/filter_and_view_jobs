@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { header: 'Status', type: 'status' },
         { header: 'Actions', type: 'actions' },
         { header: 'Job Title', key: 'Job title' },
-        { header: 'Suitability', key: 'Overall suitability' },
+        { header: 'Suitability', key: 'Overall suitability', className: 'col-narrow' },
         { header: 'German required', key: 'German language fluency required' },
         { header: 'Job description language', key: 'Job description language', className: 'col-narrow' },
         { header: 'English proficiency mentioned', key: 'English proficiency mentioned', className: 'col-narrow' },
