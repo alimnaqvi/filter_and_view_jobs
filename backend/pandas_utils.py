@@ -77,6 +77,29 @@ def apply_filters_from_params(df: pd.DataFrame, request: Request):
         elif jd_language_param == "other":
             df = df[~(jd_language_lower_col.str.contains("english") | jd_language_lower_col.str.contains("german"))]
 
+    # Apply suitability filter
+    suitability = request.query_params.getlist("suitability")
+    if suitability and "all" not in suitability:
+        suitability_lower = df['Overall suitability'].fillna('N/A').str.lower()
+        
+        combined_mask = pd.Series([False] * len(df), index=df.index)
+
+        high_mask = suitability_lower.str.contains("high")
+        medium_mask = (suitability_lower.str.contains("medium")) | (suitability_lower.str.contains("average"))
+        low_mask = suitability_lower.str.contains("low")
+
+        if "high" in suitability:
+            combined_mask |= high_mask
+        if "medium" in suitability:
+            combined_mask |= medium_mask
+        if "low" in suitability:
+            combined_mask |= low_mask
+        if "other" in suitability:
+            other_mask = ~(high_mask | medium_mask | low_mask)
+            combined_mask |= other_mask
+        
+        df = df[combined_mask]
+
     # Apply source filter
     source_param = request.query_params.getlist("source")
     if source_param and "all" not in source_param:

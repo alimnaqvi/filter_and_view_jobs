@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const daysSinceSavedFilter = document.getElementById('time-since-saved-filter');
     const germanFilter = document.getElementById('german-filter');
     const seniorityFilter = document.getElementById('seniority-filter');
+    const suitabilityFilter = document.getElementById('suitability-filter');
     const sourceFilter = document.getElementById('source-filter');
     const searchBox = document.getElementById('search-box');
     const refCacheBtn = document.getElementById('refcache-button');
@@ -18,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { header: 'Status', type: 'status' },
         { header: 'Actions', type: 'actions' },
         { header: 'Job Title', key: 'Job title' },
+        { header: 'Suitability', key: 'Overall suitability' },
         { header: 'German required', key: 'German language fluency required' },
         { header: 'Job description language', key: 'Job description language', className: 'col-narrow' },
         { header: 'English proficiency mentioned', key: 'English proficiency mentioned', className: 'col-narrow' },
@@ -52,6 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const daysSinceSaved = daysSinceSavedFilter.value;
         const germanValues = getSelectedValues(germanFilter);
         const seniorityValues = getSelectedValues(seniorityFilter);
+        const suitabilityValues = getSelectedValues(suitabilityFilter);
         const sourceValues = getSelectedValues(sourceFilter);
         const query = searchBox.value;
 
@@ -71,6 +74,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (seniorityValues.length && !seniorityValues.includes('all')) {
             seniorityValues.forEach(val => url.searchParams.append('seniority', val));
+        }
+        if (suitabilityValues.length && !suitabilityValues.includes('all')) {
+            suitabilityValues.forEach(val => url.searchParams.append('suitability', val));
         }
         if (sourceValues.length && !sourceValues.includes('all')) {
             sourceValues.forEach(val => url.searchParams.append('source', val));
@@ -274,6 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
     daysSinceSavedFilter.addEventListener('change', fetchAndRenderJobs);
     germanFilter.addEventListener('change', fetchAndRenderJobs);
     seniorityFilter.addEventListener('change', fetchAndRenderJobs);
+    suitabilityFilter.addEventListener('change', fetchAndRenderJobs);
     sourceFilter.addEventListener('change', fetchAndRenderJobs);
     jdLanguageFilter.addEventListener('change', fetchAndRenderJobs);
     refCacheBtn.addEventListener('click', () => {
