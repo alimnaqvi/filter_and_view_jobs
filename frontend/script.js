@@ -11,7 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchBox = document.getElementById('search-box');
     const refCacheBtn = document.getElementById('refcache-button');
     const jobCount = document.getElementById('job-count');
-    // TODO: After adding URL to Gemini DB, show a button to go the original link
     // Todo: Show dates in different colors?
 
     // Define table columns configuration
@@ -117,6 +116,30 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const renderActions = (actionsCell, job, row) => {
+        const performOptimisticUpdate = (newStatus) => {
+            job.status = newStatus;
+            
+            // Update Status Badge (Column 0)
+            const statusCell = row.children[0];
+            const statusClass = `status-${newStatus || 'default'}`;
+            statusCell.innerHTML = `<span class="status-badge ${statusClass}">${newStatus}</span>`;
+
+            // Handle Filter Visibility
+            const filterValue = statusFilter.value;
+            if (filterValue !== 'all' && filterValue !== newStatus) {
+                row.style.display = 'none';
+            }
+
+            // Backend Update
+            updateStatus(job.Filename, newStatus);
+
+            // Re-render actions if still visible
+            if (row.style.display !== 'none') {
+                actionsCell.innerHTML = '';
+                renderActions(actionsCell, job, row);
+            }
+        };
+
         // Link to the saved HTML file
         const viewHtmlBtn = document.createElement('a');
         viewHtmlBtn.href = `/jobs/${job.Filename}`; // Served by FastAPI's StaticFiles
@@ -141,13 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const viewedBtn = document.createElement('a');
             viewedBtn.textContent = 'Viewed';
             viewedBtn.className = 'action-btn btn-viewed';
-            viewedBtn.onclick = () => {
-                if (!statusFilter.value.includes('viewed')) {
-                    // Immediately make row invisible if the updated status isn't part of the currently selected filter
-                    row.style.display = 'none';
-                }
-                updateStatus(job.Filename, 'viewed');
-            }
+            viewedBtn.onclick = () => performOptimisticUpdate('viewed');
             actionsCell.appendChild(viewedBtn);
         }
 
@@ -163,16 +180,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 opt.textContent = "Change status"
             } else {
                 opt.textContent = item;
-                opt.onclick = () => {
-                    if (!statusFilter.value.includes(item.toLowerCase())) {
-                        // Immediately make row invisible if the updated status isn't part of the currently selected filter
-                        row.style.display = 'none';
-                    }
-                    updateStatus(job.Filename, item.toLowerCase());
-                }
             }
             statusDropdown.appendChild(opt);
         });
+
+        statusDropdown.onchange = (e) => {
+            const selectedStatus = e.target.value;
+            if (selectedStatus) {
+                performOptimisticUpdate(selectedStatus);
+                e.target.value = ""; // Reset dropdown
+            }
+        };
         actionsCell.appendChild(statusDropdown);
     };
 
@@ -244,8 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) {
                 throw new Error('Failed to update status');
             }
-            // Refresh the list to show the change
-            fetchAndRenderJobs();
+            // Optimistic update - no need to refresh list
         } catch (error) {
             console.error("Error updating status:", error);
             alert('Could not update job status.');
