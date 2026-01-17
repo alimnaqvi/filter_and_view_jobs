@@ -43,16 +43,18 @@ async def lifespan(app: FastAPI):
     This function runs when the server starts.
     It initializes the database and syncs it with the CSV.
     """
-    database.init_db()
-    database.sync_db_with_csv()
+    await database.create_db_pool()
+    await database.init_db()
+    await database.sync_db_with_csv()
     yield
+    await database.close_db_pool()
 
 # --- FastAPI App Initialization ---
 app = FastAPI(lifespan=lifespan)
 
 # --- API Endpoints ---
 @app.get("/api/jobs")
-def get_jobs(request: Request):
+async def get_jobs(request: Request):
     """
     API endpoint to get jobs.
     Allows filtering by status and a search query 'q'.
@@ -64,7 +66,7 @@ def get_jobs(request: Request):
         print("Creating new df by fetching data from DB")
         if not CSV_DB_PATH.exists():
             raise HTTPException(status_code=404, detail=f"{CSV_DB_PATH.name} not found")
-        database.sync_db_with_csv()
+        await database.sync_db_with_csv()
         # df = pd.read_csv(CSV_DB_PATH)
         saved_df = database.get_df_with_mod_time_remove_deleted(CSV_DB_PATH)
         saved_df = database.get_sorted_df_of_last_n_days(saved_df)
@@ -74,7 +76,7 @@ def get_jobs(request: Request):
         # If domain is none of linkedin, stepstone, kununu, and arbeitsagentur, classify as 'other'
         saved_df['source'] = saved_df['domain'].apply(lambda x: x if any(sub in (x or '').lower() for sub in ['linkedin', 'stepstone', 'kununu', 'arbeitsagentur']) else 'other')
         # Get statuses from our Postgres DB and merge them into the dataframe
-        statuses = database.get_job_statuses()
+        statuses = await database.get_job_statuses()
         if statuses:
             saved_df['status'] = saved_df['Filename'].map(statuses).fillna('new')
         else:
@@ -103,10 +105,10 @@ def get_jobs(request: Request):
     return df.to_dict('records')
 
 @app.put("/api/jobs/{filename}/status")
-def update_status(filename: str, status_update: StatusUpdate):
+async def update_status(filename: str, status_update: StatusUpdate):
     """API endpoint to update a job's status."""
     global saved_df
-    database.update_job_status(filename, status_update.status)
+    await database.update_job_status(filename, status_update.status)
     saved_df = pd.DataFrame()
     return {"message": f"Status of {filename} updated to {status_update.status}"}
 
