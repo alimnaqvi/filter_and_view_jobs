@@ -86,7 +86,7 @@ async def sync_db_with_csv():
 
     # Reading CSV is still synchronous as it's a file operation with pandas
     # Ideally should be done in a thread pool if file is huge, but usually fine for startup
-    df = pd.read_csv(CSV_DB_PATH)
+    df = pd.read_csv(CSV_DB_PATH, dtype=str)
     filenames = df['Filename'].unique()
 
     async with DB_POOL.acquire() as conn:
@@ -154,7 +154,7 @@ def get_sorted_df_of_last_n_days(input_df: pd.DataFrame, days: float = 7):
     return output_df
 
 def get_df_with_mod_time_remove_deleted(input_csv=CSV_DB_PATH):
-    df = pd.read_csv(input_csv)
+    df = pd.read_csv(input_csv, dtype=str)
     if not 'last_mod_time' in df.columns:
         df['last_mod_time'] = df['Filename'].apply(get_last_mod_time)
     # get_last_mod_time returns None for non-existent files
