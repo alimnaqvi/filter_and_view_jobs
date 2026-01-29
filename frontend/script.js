@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const germanFilter = document.getElementById('german-filter');
     const seniorityFilter = document.getElementById('seniority-filter');
     const suitabilityFilter = document.getElementById('suitability-filter');
+    const relocationFilter = document.getElementById('relocation-filter');
     const sourceFilter = document.getElementById('source-filter');
     const searchBox = document.getElementById('search-box');
     const refCacheBtn = document.getElementById('refcache-button');
@@ -20,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { header: 'Actions', type: 'actions' },
         { header: 'Job Title', key: 'Job title' },
         { header: 'Suitability', key: 'Overall suitability', className: 'col-narrow' },
+        { header: 'Relocation from HN', key: 'Requires relocation from Heilbronn', className: 'col-narrow' },
         { header: 'German required', key: 'German language fluency required' },
         { header: 'Job description language', key: 'Job description language', className: 'col-narrow' },
         { header: 'English proficiency mentioned', key: 'English proficiency mentioned', className: 'col-narrow' },
@@ -55,6 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const germanValues = getSelectedValues(germanFilter);
         const seniorityValues = getSelectedValues(seniorityFilter);
         const suitabilityValues = getSelectedValues(suitabilityFilter);
+        const relocationValues = getSelectedValues(relocationFilter);
         const sourceValues = getSelectedValues(sourceFilter);
         const query = searchBox.value;
 
@@ -77,6 +80,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (suitabilityValues.length && !suitabilityValues.includes('all')) {
             suitabilityValues.forEach(val => url.searchParams.append('suitability', val));
+        }
+        if (relocationValues.length && !relocationValues.includes('all')) {
+            relocationValues.forEach(val => url.searchParams.append('relocation', val));
         }
         if (sourceValues.length && !sourceValues.includes('all')) {
             sourceValues.forEach(val => url.searchParams.append('source', val));
@@ -281,6 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
     germanFilter.addEventListener('change', fetchAndRenderJobs);
     seniorityFilter.addEventListener('change', fetchAndRenderJobs);
     suitabilityFilter.addEventListener('change', fetchAndRenderJobs);
+    relocationFilter.addEventListener('change', fetchAndRenderJobs);
     sourceFilter.addEventListener('change', fetchAndRenderJobs);
     jdLanguageFilter.addEventListener('change', fetchAndRenderJobs);
     refCacheBtn.addEventListener('click', () => {

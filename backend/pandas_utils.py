@@ -100,6 +100,26 @@ def apply_filters_from_params(df: pd.DataFrame, request: Request):
         
         df = df[combined_mask]
 
+    # Apply relocation filter
+    relocation = request.query_params.getlist("relocation")
+    if relocation and "all" not in relocation:
+        relocation_lower = df['Requires relocation from Heilbronn'].fillna('N/A').str.lower()
+        
+        combined_mask = pd.Series([False] * len(df), index=df.index)
+        
+        yes_mask = relocation_lower.str.startswith("yes")
+        no_mask = relocation_lower.str.startswith("no")
+
+        if "yes" in relocation:
+            combined_mask |= yes_mask
+        if "no" in relocation:
+            combined_mask |= no_mask
+        if "other" in relocation:
+            other_mask = ~(yes_mask | no_mask)
+            combined_mask |= other_mask
+            
+        df = df[combined_mask]
+
     # Apply source filter
     source_param = request.query_params.getlist("source")
     if source_param and "all" not in source_param:
