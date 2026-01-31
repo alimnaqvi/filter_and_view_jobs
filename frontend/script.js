@@ -157,7 +157,14 @@ document.addEventListener('DOMContentLoaded', () => {
                  input.style.marginTop = '4px';
                  input.style.fontWeight = 'normal';
                  
-                 input.addEventListener('input', (e) => {
+                 input.addEventListener('keydown', (e) => {
+                     if (e.key === 'Enter') {
+                         columnFilters[col.key] = e.target.value;
+                         applyLocalFilters();
+                     }
+                 });
+
+                 input.addEventListener('blur', (e) => {
                      columnFilters[col.key] = e.target.value;
                      applyLocalFilters();
                  });
@@ -350,10 +357,10 @@ document.addEventListener('DOMContentLoaded', () => {
         refCache = true;
         fetchAndRenderJobs();
     });
-    searchBox.addEventListener('input', () => {
-        clearTimeout(searchTimeout);
-        // Debounce search input to avoid excessive API calls
-        searchTimeout = setTimeout(fetchAndRenderJobs, 300);
+    searchBox.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            fetchAndRenderJobs();
+        }
     });
 
     // Initial load
