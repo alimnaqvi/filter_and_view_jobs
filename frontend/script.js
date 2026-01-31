@@ -44,6 +44,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let searchTimeout;
     let refCache = false;
+    let allJobs = [];
+    let columnFilters = {};
     // ? (If slow) Implement local database cache and add a button to refresh the cache
 
     const getSelectedValues = (select) => {
@@ -101,7 +103,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const jobs = await response.json();
-            renderJobs(jobs);
+            allJobs = jobs;
+            applyLocalFilters();
         } catch (error) {
             console.error("Failed to fetch jobs:", error);
             jobList.innerHTML = `<tr><td colspan="6" style="color: red; text-align: center;">Error loading jobs. Is the backend server running?</td></tr>`;
@@ -109,11 +112,64 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const applyLocalFilters = () => {
+        let filteredJobs = allJobs;
+        
+        Object.keys(columnFilters).forEach(key => {
+            const filterValue = columnFilters[key].toLowerCase();
+            if (filterValue) {
+                filteredJobs = filteredJobs.filter(job => {
+                    const val = job[key] ? String(job[key]).toLowerCase() : '';
+                    return val.includes(filterValue);
+                });
+            }
+        });
+
+        renderJobs(filteredJobs);
+    };
+
     const renderHeaders = () => {
         tableHeaderRow.innerHTML = '';
         columns.forEach(col => {
             const th = document.createElement('th');
-            th.textContent = col.header;
+            
+            // Container for header text and input
+            const container = document.createElement('div');
+            container.style.display = 'flex';
+            container.style.flexDirection = 'column';
+            container.style.gap = '5px';
+
+            const textSpan = document.createElement('span');
+            textSpan.textContent = col.header;
+            container.appendChild(textSpan);
+
+            // Add search input for relevant columns
+            if (col.type !== 'status' && col.type !== 'actions') {
+                 const input = document.createElement('input');
+                 input.type = 'text';
+                 input.placeholder = 'Filter...';
+                 
+                 // Inline styles for the input
+                 input.style.width = '100%';
+                 input.style.boxSizing = 'border-box';
+                 input.style.fontSize = '12px';
+                 input.style.padding = '4px';
+                 input.style.marginTop = '4px';
+                 input.style.fontWeight = 'normal';
+                 
+                 input.addEventListener('input', (e) => {
+                     columnFilters[col.key] = e.target.value;
+                     applyLocalFilters();
+                 });
+
+                 // Prevent propagation to avoid sorting triggers if added later
+                 input.addEventListener('click', (e) => e.stopPropagation());
+                 
+                 container.appendChild(input);
+            }
+            
+            th.appendChild(container);
+
             if (col.className) {
                 th.classList.add(col.className);
             }
