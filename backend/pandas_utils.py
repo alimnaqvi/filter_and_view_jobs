@@ -100,23 +100,35 @@ def apply_filters_from_params(df: pd.DataFrame, request: Request):
         
         df = df[combined_mask]
 
-    # Apply relocation filter
-    relocation = request.query_params.getlist("relocation")
-    if relocation and "all" not in relocation:
-        relocation_lower = df['Requires relocation from Heilbronn'].fillna('N/A').str.lower()
+    # Apply commute filter
+    commute = request.query_params.getlist("commute")
+    if commute and "all" not in commute:
+        # User requested using km for approximation if hours are not specified.
+        # We'll use a rough conversion of 70 km/h.
+        hours_col = pd.to_numeric(df['Commute time from Heilbronn (hours)'], errors='coerce')
+        dist_col = pd.to_numeric(df['Distance from Heilbronn (km)'], errors='coerce')
+        effective_hours = hours_col.fillna(dist_col / 70.0)
         
         combined_mask = pd.Series([False] * len(df), index=df.index)
         
-        yes_mask = relocation_lower.str.startswith("yes")
-        no_mask = relocation_lower.str.startswith("no")
-
-        if "yes" in relocation:
-            combined_mask |= yes_mask
-        if "no" in relocation:
-            combined_mask |= no_mask
-        if "other" in relocation:
-            other_mask = ~(yes_mask | no_mask)
-            combined_mask |= other_mask
+        # Define ranges
+        # "remote_or_hn": 0 hours or km (using < 0.1 for float tolerance)
+        is_zero = (effective_hours < 0.1)
+        
+        if "remote_or_hn" in commute:
+            combined_mask |= is_zero
+        if "less_than_1" in commute:
+            combined_mask |= (effective_hours >= 0.1) & (effective_hours < 1)
+        if "1_to_2" in commute:
+            combined_mask |= (effective_hours >= 1) & (effective_hours < 2)
+        if "2_to_3" in commute:
+            combined_mask |= (effective_hours >= 2) & (effective_hours < 3)
+        if "3_to_4" in commute:
+            combined_mask |= (effective_hours >= 3) & (effective_hours < 4)
+        if "more_than_4" in commute:
+            combined_mask |= (effective_hours >= 4)
+        if "other" in commute:
+            combined_mask |= effective_hours.isna()
             
         df = df[combined_mask]
 

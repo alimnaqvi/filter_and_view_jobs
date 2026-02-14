@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const germanFilter = document.getElementById('german-filter');
     const seniorityFilter = document.getElementById('seniority-filter');
     const suitabilityFilter = document.getElementById('suitability-filter');
-    const relocationFilter = document.getElementById('relocation-filter');
+    const commuteFilter = document.getElementById('commute-filter');
     const sourceFilter = document.getElementById('source-filter');
     const searchBox = document.getElementById('search-box');
     const refCacheBtn = document.getElementById('refcache-button');
@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { header: 'Actions', type: 'actions' },
         { header: 'Job Title', key: 'Job title' },
         { header: 'Suitability', key: 'Overall suitability', className: 'col-narrow' },
-        { header: 'Relocation from HN', key: 'Requires relocation from Heilbronn', className: 'col-narrow' },
+        { header: 'Commute from HN', type: 'commute', key: 'Commute time from Heilbronn (hours)', distanceKey: 'Distance from Heilbronn (km)', className: 'col-narrow' },
         { header: 'German required', key: 'German language fluency required' },
         { header: 'Job description language', key: 'Job description language', className: 'col-narrow' },
         { header: 'English proficiency mentioned', key: 'English proficiency mentioned', className: 'col-narrow' },
@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const germanValues = getSelectedValues(germanFilter);
         const seniorityValues = getSelectedValues(seniorityFilter);
         const suitabilityValues = getSelectedValues(suitabilityFilter);
-        const relocationValues = getSelectedValues(relocationFilter);
+        const commuteValues = getSelectedValues(commuteFilter);
         const sourceValues = getSelectedValues(sourceFilter);
         const query = searchBox.value;
 
@@ -83,8 +83,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (suitabilityValues.length && !suitabilityValues.includes('all')) {
             suitabilityValues.forEach(val => url.searchParams.append('suitability', val));
         }
-        if (relocationValues.length && !relocationValues.includes('all')) {
-            relocationValues.forEach(val => url.searchParams.append('relocation', val));
+        if (commuteValues.length && !commuteValues.includes('all')) {
+            commuteValues.forEach(val => url.searchParams.append('commute', val));
         }
         if (sourceValues.length && !sourceValues.includes('all')) {
             sourceValues.forEach(val => url.searchParams.append('source', val));
@@ -292,6 +292,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if (col.type === 'actions') {
                     cell = document.createElement('td');
                     renderActions(cell, job, row);
+                } else if (col.type === 'commute') {
+                    const hoursVal = parseFloat(job[col.key]);
+                    const kmVal = parseFloat(job[col.distanceKey]);
+                    let text = 'N/A';
+
+                    if (!isNaN(hoursVal)) {
+                        const h = Math.floor(hoursVal);
+                        const m = Math.round((hoursVal - h) * 60);
+                        let timeStr = '';
+                        if (h > 0) timeStr += `${h} hr `;
+                        if (m > 0 || h === 0) timeStr += `${m} min`; // show 0 min if 0 hours
+                        text = timeStr.trim();
+                    }
+                    
+                    if (!isNaN(kmVal)) {
+                         const kmStr = `(${Math.round(kmVal)} km)`;
+                         text = text !== 'N/A' ? `${text} ${kmStr}` : kmStr;
+                    }
+                    
+                    cell = createCell(text);
                 } else if (col.type === 'date') {
                     let dateStr;
                     if (job[col.key]) {
@@ -350,7 +370,7 @@ document.addEventListener('DOMContentLoaded', () => {
     germanFilter.addEventListener('change', fetchAndRenderJobs);
     seniorityFilter.addEventListener('change', fetchAndRenderJobs);
     suitabilityFilter.addEventListener('change', fetchAndRenderJobs);
-    relocationFilter.addEventListener('change', fetchAndRenderJobs);
+    commuteFilter.addEventListener('change', fetchAndRenderJobs);
     sourceFilter.addEventListener('change', fetchAndRenderJobs);
     jdLanguageFilter.addEventListener('change', fetchAndRenderJobs);
     refCacheBtn.addEventListener('click', () => {
