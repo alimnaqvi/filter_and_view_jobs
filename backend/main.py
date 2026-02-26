@@ -43,11 +43,11 @@ async def lifespan(app: FastAPI):
     This function runs when the server starts.
     It initializes the database and syncs it with the CSV.
     """
-    await database.create_db_pool()
+    await database.create_db_connection()
     await database.init_db()
     await database.sync_db_with_csv()
     yield
-    await database.close_db_pool()
+    await database.close_db_connection()
 
 # --- FastAPI App Initialization ---
 app = FastAPI(lifespan=lifespan)
@@ -79,7 +79,7 @@ async def get_jobs(request: Request):
         new_df['domain'] = new_df['Job URL'].apply(lambda url: urlparse(url).hostname if pd.notna(url) else 'N/A')
         # If domain is none of linkedin, stepstone, kununu, and arbeitsagentur, classify as 'other'
         new_df['source'] = new_df['domain'].apply(lambda x: x if any(sub in (x or '').lower() for sub in ['linkedin', 'stepstone', 'kununu', 'arbeitsagentur']) else 'other')
-        # Get statuses from our Postgres DB and merge them into the dataframe
+        # Get statuses from our local DB and merge them into the dataframe
         statuses = await database.get_job_statuses()
         if statuses:
             new_df['status'] = new_df['Filename'].map(statuses).fillna('new')

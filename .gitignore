@@ -6,3 +6,4 @@ test*
 temp/
 __pycache__
 *.tmp
+local_db/
